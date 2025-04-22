@@ -1,4 +1,4 @@
-package com.bank.payment.Enums;
+package com.bank.payment.enums;
 
 public enum CurrencyType {
     BRL;
