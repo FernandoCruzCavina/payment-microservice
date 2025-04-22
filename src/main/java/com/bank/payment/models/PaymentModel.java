@@ -1,11 +1,12 @@
 package com.bank.payment.models;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import com.bank.payment.Enums.CurrencyType;
-import com.bank.payment.Enums.PaymentType;
+import com.bank.payment.enums.CurrencyType;
+import com.bank.payment.enums.PaymentType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import jakarta.persistence.Column;
@@ -22,7 +23,7 @@ import lombok.Data;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Entity
 @Table(name = "TB_PAYMENTS")
-public class PaymentModel {
+public class PaymentModel implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
