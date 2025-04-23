@@ -3,8 +3,10 @@ package com.bank.payment.models;
 import java.io.Serializable;
 import java.util.UUID;
 
+import com.bank.payment.enums.PixKeyType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -16,11 +18,17 @@ import lombok.Data;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Entity
 @Table(name = "TB_PIXS")
-public class PIXModel implements Serializable {
+public class PixModel implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID idPIX;
+
+    @Column(nullable = false)
+    private PixKeyType pixKeyType;
+
+    @Column(name = "pix_key", nullable = false, unique = true)
+    private String key;
 
 }
