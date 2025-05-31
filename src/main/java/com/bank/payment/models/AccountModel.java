@@ -1,17 +1,25 @@
 package com.bank.payment.models;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Entity
 @Table(name = "TB_ACCOUNTS")
@@ -19,13 +27,29 @@ public class AccountModel implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private Long idAccount;
 
-    @Column(nullable = false)
-    private double balance;
+    @Column(nullable = false, unique = true)
+    private String accountNumber;
 
-    @Column(name = "date_opened")
-    private Long dateOpened;
+    @Column(nullable = false)
+    private BigDecimal balance;
+
+    @Column(nullable = false)
+    private Long createdAt;
+
+    @Column(nullable = false)
+    private Long lastUpdatedAt;
+
+    @Column(nullable = true)
+    private String imageUrl;
+
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @OneToMany(mappedBy = "senderAccount", fetch = FetchType.LAZY)
+    Set<PaymentModel> sendPayment;
+
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @OneToMany(mappedBy = "receiverAccount", fetch = FetchType.LAZY)
+    Set<PaymentModel> receivePayment;
 
 }

@@ -16,6 +16,8 @@ import com.bank.payment.services.AccountService;
 import com.bank.payment.services.PaymentService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @CrossOrigin(origins = "*")
@@ -55,5 +57,8 @@ public class PaymentController {
             return ResponseEntity.status(HttpStatus.OK).body("Payment deleted sucessed");
         }
     }
+
+    // @PostMapping("/{idAccount}/{idAccount2}")
+    // public ResponseEntity<Object>
 
 }
