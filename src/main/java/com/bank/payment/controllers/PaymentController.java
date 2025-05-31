@@ -1,9 +1,7 @@
 package com.bank.payment.controllers;
 
 import java.util.List;
-import java.util.Observable;
 import java.util.Optional;
-import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,7 +16,6 @@ import com.bank.payment.services.AccountService;
 import com.bank.payment.services.PaymentService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @CrossOrigin(origins = "*")
@@ -37,7 +34,7 @@ public class PaymentController {
     }
 
     @GetMapping("/{idPayment}")
-    public ResponseEntity<Object> getOnePayment(@PathVariable(value = "idPayment") UUID idPayment) {
+    public ResponseEntity<Object> getOnePayment(@PathVariable(value = "idPayment") Long idPayment) {
         Optional<PaymentModel> paymentModelOptional = paymentService.findById(idPayment);
 
         if (!paymentModelOptional.isPresent()) {
@@ -48,7 +45,7 @@ public class PaymentController {
     }
 
     @DeleteMapping("/{idPayment}")
-    public ResponseEntity<Object> deletePayment(@PathVariable(value = "idPayment") UUID idPayment) {
+    public ResponseEntity<Object> deletePayment(@PathVariable(value = "idPayment") Long idPayment) {
         Optional<PaymentModel> paymentModelOptional = paymentService.findById(idPayment);
 
         if (!paymentModelOptional.isPresent()) {

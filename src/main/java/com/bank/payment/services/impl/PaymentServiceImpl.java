@@ -23,7 +23,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public Optional<PaymentModel> findById(UUID idPayment) {
+    public Optional<PaymentModel> findById(Long idPayment) {
         return paymentRepository.findById(idPayment);
     }
 
