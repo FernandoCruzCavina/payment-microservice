@@ -1,5 +1,7 @@
 package com.bank.payment.services.impl;
 
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +18,16 @@ public class AccountServiceImp implements AccountService {
     @Override
     public AccountModel save(AccountModel accountModel) {
         return accountRepository.save(accountModel);
+    }
+
+    @Override
+    public Optional<AccountModel> findById(Long idAccount) {
+        return accountRepository.findById(idAccount);
+    }
+
+    @Override
+    public Optional<AccountModel> findByPixKey(String pixKey) {
+        return accountRepository.findByPixKey(pixKey);
     }
 
 }

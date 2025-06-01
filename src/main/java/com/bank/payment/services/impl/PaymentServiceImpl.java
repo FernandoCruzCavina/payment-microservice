@@ -31,4 +31,9 @@ public class PaymentServiceImpl implements PaymentService {
         paymentRepository.delete(paymentModel);
     }
 
+    @Override
+    public PaymentModel save(PaymentModel paymentModel) {
+        return paymentRepository.save(paymentModel);
+    }
+
 }

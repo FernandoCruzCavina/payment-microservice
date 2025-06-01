@@ -2,7 +2,6 @@ package com.bank.payment.models;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 import com.bank.payment.enums.CurrencyType;
 import com.bank.payment.enums.PaymentType;
@@ -46,10 +45,10 @@ public class PaymentModel implements Serializable {
     private CurrencyType currencyType;
 
     @Column(nullable = false)
-    private LocalDateTime paymentRequestDate;
+    private Long paymentRequestDate;
 
     @Column(nullable = false)
-    private LocalDateTime paymentCompletionDate;
+    private Long paymentCompletionDate;
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @ManyToOne(optional = false, fetch = FetchType.LAZY)

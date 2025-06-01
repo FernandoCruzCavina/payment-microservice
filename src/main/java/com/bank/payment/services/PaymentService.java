@@ -13,4 +13,6 @@ public interface PaymentService {
 
     void delete(PaymentModel paymentModel);
 
+    PaymentModel save(PaymentModel paymentModel);
+
 }
