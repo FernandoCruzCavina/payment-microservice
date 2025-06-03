@@ -18,9 +18,11 @@ import com.bank.payment.dtos.PaymentDto;
 import com.bank.payment.enums.CurrencyType;
 import com.bank.payment.enums.PaymentType;
 import com.bank.payment.models.AccountModel;
+import com.bank.payment.models.KnownPixModel;
 import com.bank.payment.models.PaymentModel;
 import com.bank.payment.models.PixModel;
 import com.bank.payment.services.AccountService;
+import com.bank.payment.services.KnownPixService;
 import com.bank.payment.services.PaymentService;
 import com.bank.payment.services.PixService;
 
@@ -31,7 +33,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @CrossOrigin(origins = "*")
-@RequestMapping("/payments")
+@RequestMapping()
 public class PaymentController {
 
     @Autowired
@@ -39,6 +41,9 @@ public class PaymentController {
 
     @Autowired
     AccountService accountService;
+
+    @Autowired
+    KnownPixService knownPixService;
 
     @Autowired
     PixService pixService;
@@ -77,6 +82,9 @@ public class PaymentController {
         Optional<AccountModel> accountSenderModelOptional = accountService.findById(idAccount);
         Optional<AccountModel> accountReceiveModelOptional = accountService.findByPixKey(pixKey);
         Optional<PixModel> pixModelOptional = pixService.findByKey(pixKey);
+        // Optional<KnownPixModel> knownPixModelExists =
+        // knownPixService.existsByIdKeyAndIdAccount(idAccount,
+        // pixModelOptional.get().getIdPix());
 
         if (!accountSenderModelOptional.isPresent()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Account sender not found!");
@@ -90,7 +98,13 @@ public class PaymentController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Account receiver not found!");
         }
 
+        // if (knownPixModelExists.isPresent()) {
+        // return ResponseEntity.status(HttpStatus.NOT_FOUND)
+        // .body(knownPixModelExists.get());
+        // }
+
         var paymentModel = new PaymentModel();
+        // var knownPixModel = new KnownPixModel();
 
         // long sevenDaysAgoEpoch =
         // java.time.Instant.now().minus(java.time.Duration.ofDays(7)).getEpochSecond();
@@ -109,7 +123,21 @@ public class PaymentController {
         paymentModel.setSenderAccount(accountSenderModelOptional.get());
         paymentModel.setPaymentType(PaymentType.PIX);
 
+        accountSenderModelOptional.get()
+                .setBalance(accountSenderModelOptional.get().getBalance().subtract(paymentModel.getAmountPaid()));
+
+        accountReceiveModelOptional.get()
+                .setBalance(accountReceiveModelOptional.get().getBalance().add(paymentModel.getAmountPaid()));
+
+        // knownPixModel.setIdAccount(accountSenderModelOptional.get().getIdAccount());
+        // knownPixModel.setIdKey(pixModelOptional.get().getIdPix());
+
+        System.out.println("Sender: " + accountSenderModelOptional.get().getIdAccount());
+        System.out.println("Receiver: " + accountReceiveModelOptional.get().getIdAccount());
+
         paymentService.save(paymentModel);
+        accountService.updateBalance(accountSenderModelOptional.get());
+        accountService.updateBalance(accountReceiveModelOptional.get());
 
         return ResponseEntity.status(HttpStatus.OK).body(paymentModel);
     }

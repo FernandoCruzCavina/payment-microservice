@@ -12,8 +12,8 @@ import lombok.Data;
 public class AccountEventDto {
 
     private Long idAccount;
-    private String accountNumber;
     private BigDecimal balance;
+    private String accountNumber;
     private Long createdAt;
     private Long lastUpdatedAt;
     private String imageUrl;

@@ -25,6 +25,7 @@ public class AccountConsumer {
 
         switch (ActionType.valueOf(accountEventDto.getActionType())) {
             case CREATE:
+            case UPDATE:
                 accountService.save(accountModel);
                 break;
 

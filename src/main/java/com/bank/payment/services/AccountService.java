@@ -11,4 +11,8 @@ public interface AccountService {
     Optional<AccountModel> findById(Long idAccount);
 
     Optional<AccountModel> findByPixKey(String pixKey);
+
+    void delete(Long idAccount);
+
+    AccountModel updateBalance(AccountModel accountModel);
 }

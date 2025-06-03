@@ -4,6 +4,9 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Set;
 
+import org.springframework.beans.BeanUtils;
+
+import com.bank.payment.dtos.AccountEventDto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -29,11 +32,11 @@ public class AccountModel implements Serializable {
     @Id
     private Long idAccount;
 
-    @Column(nullable = false, unique = true)
-    private String accountNumber;
-
     @Column(nullable = false)
     private BigDecimal balance;
+
+    @Column()
+    private Long accountNumber;
 
     @Column(nullable = false)
     private Long createdAt;
@@ -52,4 +55,11 @@ public class AccountModel implements Serializable {
     @OneToMany(mappedBy = "receiverAccount", fetch = FetchType.LAZY)
     Set<PaymentModel> receivePayment;
 
+    public AccountEventDto convertToAccountEventDto() {
+        var accountEventDto = new AccountEventDto();
+
+        BeanUtils.copyProperties(this, accountEventDto);
+
+        return accountEventDto;
+    }
 }
