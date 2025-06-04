@@ -136,8 +136,8 @@ public class PaymentController {
         System.out.println("Receiver: " + accountReceiveModelOptional.get().getIdAccount());
 
         paymentService.save(paymentModel);
-        accountService.updateBalance(accountSenderModelOptional.get());
-        accountService.updateBalance(accountReceiveModelOptional.get());
+        accountService.updateBalanceSender(accountSenderModelOptional.get());
+        accountService.updateBalanceReceive(accountReceiveModelOptional.get());
 
         return ResponseEntity.status(HttpStatus.OK).body(paymentModel);
     }

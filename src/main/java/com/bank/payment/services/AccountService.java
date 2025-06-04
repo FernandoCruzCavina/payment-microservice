@@ -14,5 +14,7 @@ public interface AccountService {
 
     void delete(Long idAccount);
 
-    AccountModel updateBalance(AccountModel accountModel);
+    AccountModel updateBalanceReceive(AccountModel accountModel);
+
+    AccountModel updateBalanceSender(AccountModel accountModel);
 }

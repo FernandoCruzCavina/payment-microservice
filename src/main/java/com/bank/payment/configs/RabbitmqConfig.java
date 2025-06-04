@@ -20,6 +20,12 @@ public class RabbitmqConfig {
     @Value(value = "${broker.exchange.accountEventExchange}")
     private String exchangeAccountEvent;
 
+    @Value(value = "${broker.exchange.paymentSenderExchange}")
+    private String excchangePaymentSender;
+
+    @Value(value = "${broker.exchange.paymentSenderExchange}")
+    private String excchangePaymentReceiver;
+
     @Bean
     public RabbitTemplate rabbitTemplate() {
         RabbitTemplate template = new RabbitTemplate(cachingConnectionFactory);

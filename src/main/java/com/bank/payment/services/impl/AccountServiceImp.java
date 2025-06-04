@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import com.bank.payment.enums.ActionType;
 import com.bank.payment.models.AccountModel;
 import com.bank.payment.publishers.AccountEventPublisher;
+import com.bank.payment.publishers.PaymentReceiverEventPublisher;
+import com.bank.payment.publishers.PaymentSenderEventPublisher;
 import com.bank.payment.repository.AccountRepository;
 import com.bank.payment.services.AccountService;
 
@@ -17,7 +19,10 @@ import jakarta.transaction.Transactional;
 public class AccountServiceImp implements AccountService {
 
     @Autowired
-    AccountEventPublisher accountEventPublisher;
+    PaymentReceiverEventPublisher paymentReceiverEventPublisher;
+
+    @Autowired
+    PaymentSenderEventPublisher paymentSenderEventPublisher;
 
     @Autowired
     AccountRepository accountRepository;
@@ -44,11 +49,23 @@ public class AccountServiceImp implements AccountService {
 
     @Transactional
     @Override
-    public AccountModel updateBalance(AccountModel accountModel) {
+    public AccountModel updateBalanceSender(AccountModel accountModel) {
 
         System.out.println("Enviando evento para: " + accountModel.getIdAccount());
 
-        accountEventPublisher.publishAccountEvent(accountModel.convertToAccountEventDto(), ActionType.PAYMENT);
+        paymentSenderEventPublisher.publishPaymentSenderEvent(accountModel.convertToAccountEventDto(),
+                ActionType.PAYMENT);
+        return accountModel;
+    }
+
+    @Transactional
+    @Override
+    public AccountModel updateBalanceReceive(AccountModel accountModel) {
+
+        System.out.println("Enviando evento para: " + accountModel.getIdAccount());
+
+        paymentReceiverEventPublisher.publishPaymentReceiverEvent(accountModel.convertToAccountEventDto(),
+                ActionType.PAYMENT);
         return accountModel;
     }
 
