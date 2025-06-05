@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -44,24 +45,24 @@ public class PaymentSocketController{
     private final String statusQueue = "/queue/status";
 
     @MessageMapping("/request")
-    public void analyzePaymentRequest(PaymentRequestDto paymentDto, String name){
+    public void analyzePaymentRequest(PaymentRequestDto paymentDto, @Header("username")String username){
         
         Optional<AccountModel> accountSenderModelOptional = accountService.findById(paymentDto.idAccount());
         Optional<AccountModel> accountReceiveModelOptional = accountService.findByPixKey(paymentDto.pixKey());
         Optional<PixModel> pixModelOptional = pixService.findByKey(paymentDto.pixKey());
     
         if (!accountSenderModelOptional.isPresent()) {
-            messagingTemplate.convertAndSendToUser(name, confirmQueue, "Account sender not found!");
+            messagingTemplate.convertAndSendToUser(username, confirmQueue, "Account sender not found!");
             return;
         }
 
         if (!pixModelOptional.isPresent()) {
-            messagingTemplate.convertAndSendToUser(name, confirmQueue, "Pix not found!");
+            messagingTemplate.convertAndSendToUser(username, confirmQueue, "Pix not found!");
             return;
         }
         
         if (!accountReceiveModelOptional.isPresent()) {
-            messagingTemplate.convertAndSendToUser(name, confirmQueue, "Account receiver not found!");
+            messagingTemplate.convertAndSendToUser(username, confirmQueue, "Account receiver not found!");
             return;
         }
             
@@ -85,13 +86,13 @@ public class PaymentSocketController{
             // ago.");
             // }
 
-        messagingTemplate.convertAndSendToUser(name, confirmQueue, "Do you want to confirm the payment of R$" + paymentDto.amountPaid() + " ?");;
+        messagingTemplate.convertAndSendToUser(username, confirmQueue, "Do you want to confirm the payment of R$" + paymentDto.amountPaid() + " ?");;
     }
 
     @MessageMapping("/confirm")
-    public void sendPix(@Payload PaymentConfirmationDto confirmation, String name) {
+    public void sendPix(@Payload PaymentConfirmationDto confirmation,@Header("username") String username) {
         if (!confirmation.isConfirm()) {
-            messagingTemplate.convertAndSendToUser(name, statusQueue, "Payment Cancelled!");
+            messagingTemplate.convertAndSendToUser(username, statusQueue, "Payment Cancelled!");
             return;
         }
 
@@ -99,7 +100,7 @@ public class PaymentSocketController{
         Optional<AccountModel> accountReceiveModelOptional = accountService.findByPixKey(confirmation.pixKey());
 
         if (accountSenderModelOptional.isEmpty() || accountReceiveModelOptional.isEmpty()) {
-            messagingTemplate.convertAndSendToUser(name, statusQueue, "Account receiver not found!");
+            messagingTemplate.convertAndSendToUser(username, statusQueue, "Account receiver not found!");
             return;
         }
 
@@ -129,6 +130,6 @@ public class PaymentSocketController{
         accountService.updateBalanceSender(accountSenderModelOptional.get());
         accountService.updateBalanceReceive(accountReceiveModelOptional.get());
 
-        messagingTemplate.convertAndSendToUser(name, statusQueue, paymentModel);
+        messagingTemplate.convertAndSendToUser(username, statusQueue, paymentModel);
     }
 }
