@@ -7,14 +7,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.bank.payment.models.PaymentModel;
+import com.bank.payment.publishers.PaymentEventPublisher;
 import com.bank.payment.repository.PaymentRepository;
 import com.bank.payment.services.PaymentService;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class PaymentServiceImpl implements PaymentService {
 
     @Autowired
     PaymentRepository paymentRepository;
+
+    @Autowired
+    PaymentEventPublisher paymentEventPublisher;
 
     @Override
     public List<PaymentModel> findAll() {
@@ -34,6 +40,14 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public PaymentModel save(PaymentModel paymentModel) {
         return paymentRepository.save(paymentModel);
+    }
+
+    @Transactional
+    @Override
+    public PaymentModel savePayment(PaymentModel paymentModel) {
+        paymentEventPublisher.publishPaymentEvent(paymentModel.convertToPaymentEventDto());
+
+        return paymentModel;
     }
 
 }

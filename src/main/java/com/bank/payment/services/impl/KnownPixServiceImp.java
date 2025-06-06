@@ -16,8 +16,8 @@ public class KnownPixServiceImp implements KnownPixService {
     KnownPixRepository knownPixRepository;
 
     @Override
-    public Optional<KnownPixModel> existsByIdKeyAndIdAccount(Long idAccount, Long idKey) {
-        return knownPixRepository.existsByIdKeyAndIdAccount(idAccount, idKey);
+    public Optional<KnownPixModel> existsByIdAccountAndPixKey(Long idAccount, String pixKey) {
+        return knownPixRepository.existsByIdAccountAndPixKey(idAccount, pixKey);
     }
 
     @Override

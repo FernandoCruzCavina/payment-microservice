@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 
 import com.bank.payment.enums.ActionType;
 import com.bank.payment.models.AccountModel;
-import com.bank.payment.publishers.AccountEventPublisher;
 import com.bank.payment.publishers.PaymentReceiverEventPublisher;
 import com.bank.payment.publishers.PaymentSenderEventPublisher;
 import com.bank.payment.repository.AccountRepository;

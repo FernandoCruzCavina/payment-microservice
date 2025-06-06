@@ -24,7 +24,7 @@ import com.bank.payment.services.PaymentService;
 import com.bank.payment.services.PixService;
 
 @Controller
-public class PaymentSocketController{
+public class PaymentSocketController {
 
     @Autowired
     private PaymentService paymentService;
@@ -45,12 +45,12 @@ public class PaymentSocketController{
     private final String statusQueue = "/queue/status";
 
     @MessageMapping("/request")
-    public void analyzePaymentRequest(PaymentRequestDto paymentDto, @Header("username")String username){
-        
+    public void analyzePaymentRequest(PaymentRequestDto paymentDto, @Header("username") String username) {
+
         Optional<AccountModel> accountSenderModelOptional = accountService.findById(paymentDto.idAccount());
         Optional<AccountModel> accountReceiveModelOptional = accountService.findByPixKey(paymentDto.pixKey());
         Optional<PixModel> pixModelOptional = pixService.findByKey(paymentDto.pixKey());
-    
+
         if (!accountSenderModelOptional.isPresent()) {
             messagingTemplate.convertAndSendToUser(username, confirmQueue, "Account sender not found!");
             return;
@@ -60,37 +60,39 @@ public class PaymentSocketController{
             messagingTemplate.convertAndSendToUser(username, confirmQueue, "Pix not found!");
             return;
         }
-        
+
         if (!accountReceiveModelOptional.isPresent()) {
             messagingTemplate.convertAndSendToUser(username, confirmQueue, "Account receiver not found!");
             return;
         }
-            
-            // Optional<KnownPixModel> knownPixModelExists =
-            // knownPixService.existsByIdKeyAndIdAccount(idAccount,
-            // pixModelOptional.get().getIdPix());
-        
-            // if (knownPixModelExists.isPresent()) {
-            // return ResponseEntity.status(HttpStatus.NOT_FOUND)
-            // .body(knownPixModelExists.get());
-            // }
-            
-            // var knownPixModel = new KnownPixModel();
-        
-            // long sevenDaysAgoEpoch =
-            // java.time.Instant.now().minus(java.time.Duration.ofDays(7)).getEpochSecond();
-        
-            // if (accountReceiveModelOptional.get().getCreatedAt() >= sevenDaysAgoEpoch) {
-            // return ResponseEntity.status(HttpStatus.LOCKED)
-            // .body("The account that will receive the Pix was created less than 7 days
-            // ago.");
-            // }
 
-        messagingTemplate.convertAndSendToUser(username, confirmQueue, "Do you want to confirm the payment of R$" + paymentDto.amountPaid() + " ?");;
+        // Optional<KnownPixModel> knownPixModelExists =
+        // knownPixService.existsByIdKeyAndIdAccount(idAccount,
+        // pixModelOptional.get().getIdPix());
+
+        // if (knownPixModelExists.isPresent()) {
+        // return ResponseEntity.status(HttpStatus.NOT_FOUND)
+        // .body(knownPixModelExists.get());
+        // }
+
+        // var knownPixModel = new KnownPixModel();
+
+        // long sevenDaysAgoEpoch =
+        // java.time.Instant.now().minus(java.time.Duration.ofDays(7)).getEpochSecond();
+
+        // if (accountReceiveModelOptional.get().getCreatedAt() >= sevenDaysAgoEpoch) {
+        // return ResponseEntity.status(HttpStatus.LOCKED)
+        // .body("The account that will receive the Pix was created less than 7 days
+        // ago.");
+        // }
+
+        messagingTemplate.convertAndSendToUser(username, confirmQueue,
+                "Do you want to confirm the payment of R$" + paymentDto.amountPaid() + " ?");
+        ;
     }
 
     @MessageMapping("/confirm")
-    public void sendPix(@Payload PaymentConfirmationDto confirmation,@Header("username") String username) {
+    public void sendPix(@Payload PaymentConfirmationDto confirmation, @Header("username") String username) {
         if (!confirmation.isConfirm()) {
             messagingTemplate.convertAndSendToUser(username, statusQueue, "Payment Cancelled!");
             return;
@@ -107,7 +109,6 @@ public class PaymentSocketController{
         var paymentModel = new PaymentModel();
 
         BeanUtils.copyProperties(confirmation, paymentModel);
-        paymentModel.setCurrencyType(CurrencyType.BRL);
         paymentModel.setPaymentRequestDate(new Date().getTime());
         paymentModel.setPaymentCompletionDate(new Date().getTime());
         paymentModel.setReceiverAccount(accountReceiveModelOptional.get());
@@ -123,10 +124,12 @@ public class PaymentSocketController{
         // knownPixModel.setIdAccount(accountSenderModelOptional.get().getIdAccount());
         // knownPixModel.setIdKey(pixModelOptional.get().getIdPix());
 
-        System.out.println("Sender: " + accountSenderModelOptional.get().getIdAccount());
-        System.out.println("Receiver: " + accountReceiveModelOptional.get().getIdAccount());
+        // System.out.println("Sender: " +
+        // accountSenderModelOptional.get().getIdAccount());
+        // System.out.println("Receiver: " +
+        // accountReceiveModelOptional.get().getIdAccount());
 
-        paymentService.save(paymentModel);
+        paymentService.savePayment(paymentModel);
         accountService.updateBalanceSender(accountSenderModelOptional.get());
         accountService.updateBalanceReceive(accountReceiveModelOptional.get());
 

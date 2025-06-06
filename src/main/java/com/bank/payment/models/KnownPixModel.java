@@ -24,11 +24,11 @@ public class KnownPixModel implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long idKnownPix;
 
     @Column(nullable = false, unique = true)
-    private Long idKey;
+    private String pixKey;
 
     @Column(nullable = false)
     private Long idAccount;

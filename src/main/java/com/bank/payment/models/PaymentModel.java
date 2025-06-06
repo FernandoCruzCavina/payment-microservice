@@ -3,7 +3,9 @@ package com.bank.payment.models;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
-import com.bank.payment.enums.CurrencyType;
+import org.springframework.beans.BeanUtils;
+
+import com.bank.payment.dtos.PaymentEventDto;
 import com.bank.payment.enums.PaymentType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -41,10 +43,6 @@ public class PaymentModel implements Serializable {
     private BigDecimal amountPaid;
 
     @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private CurrencyType currencyType;
-
-    @Column(nullable = false)
     private Long paymentRequestDate;
 
     @Column(nullable = false)
@@ -57,4 +55,11 @@ public class PaymentModel implements Serializable {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private AccountModel receiverAccount;
+
+    public PaymentEventDto convertToPaymentEventDto() {
+        var paymentEventDto = new PaymentEventDto();
+
+        BeanUtils.copyProperties(this, paymentEventDto);
+        return paymentEventDto;
+    }
 }

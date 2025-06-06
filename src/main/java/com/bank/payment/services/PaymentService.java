@@ -15,4 +15,6 @@ public interface PaymentService {
 
     PaymentModel save(PaymentModel paymentModel);
 
+    PaymentModel savePayment(PaymentModel paymentModel);
+
 }

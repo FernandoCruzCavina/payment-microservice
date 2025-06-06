@@ -7,6 +7,6 @@ import lombok.Data;
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class KnownPixDto {
-    private String idKey;
+    private String pixKey;
     private String idAccount;
 }

@@ -1,19 +1,30 @@
 package com.bank.payment.controllers;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.bank.payment.dtos.PaymentDto;
+import com.bank.payment.enums.CurrencyType;
+import com.bank.payment.enums.PaymentType;
+import com.bank.payment.models.AccountModel;
+import com.bank.payment.models.KnownPixModel;
 import com.bank.payment.models.PaymentModel;
+import com.bank.payment.models.PixModel;
 import com.bank.payment.services.AccountService;
 import com.bank.payment.services.KnownPixService;
 import com.bank.payment.services.PaymentService;
@@ -64,15 +75,12 @@ public class PaymentController {
         }
     }
 
-    /*@PostMapping("/{idAccount}/pix/{pixKey}")
+    @PostMapping("/{idAccount}/pix/{pixKey}")
     public ResponseEntity<Object> sendPix(@PathVariable(value = "idAccount") Long idAccount,
             @PathVariable(value = "pixKey") String pixKey, @RequestBody @Validated PaymentDto paymentDto) {
         Optional<AccountModel> accountSenderModelOptional = accountService.findById(idAccount);
         Optional<AccountModel> accountReceiveModelOptional = accountService.findByPixKey(pixKey);
         Optional<PixModel> pixModelOptional = pixService.findByKey(pixKey);
-        // Optional<KnownPixModel> knownPixModelExists =
-        // knownPixService.existsByIdKeyAndIdAccount(idAccount,
-        // pixModelOptional.get().getIdPix());
 
         if (!accountSenderModelOptional.isPresent()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Account sender not found!");
@@ -85,14 +93,21 @@ public class PaymentController {
         if (!accountReceiveModelOptional.isPresent()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Account receiver not found!");
         }
+        Optional<KnownPixModel> knownPixModelExists = knownPixService.existsByIdAccountAndPixKey(idAccount,
+                pixModelOptional.get().getKey());
 
-        // if (knownPixModelExists.isPresent()) {
-        // return ResponseEntity.status(HttpStatus.NOT_FOUND)
-        // .body(knownPixModelExists.get());
-        // }
+        if (!knownPixModelExists.isPresent()) {
+            var knownPixModel = new KnownPixModel();
+
+            knownPixModel.setIdAccount(accountSenderModelOptional.get().getIdAccount());
+            knownPixModel.setPixKey(pixModelOptional.get().getKey());
+            knownPixService.save(knownPixModel);
+
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("You have never sent a Pix to this person before. Do you want to proceed?");
+        }
 
         var paymentModel = new PaymentModel();
-        // var knownPixModel = new KnownPixModel();
 
         // long sevenDaysAgoEpoch =
         // java.time.Instant.now().minus(java.time.Duration.ofDays(7)).getEpochSecond();
@@ -104,7 +119,6 @@ public class PaymentController {
         // }
 
         BeanUtils.copyProperties(paymentDto, paymentModel);
-        paymentModel.setCurrencyType(CurrencyType.BRL);
         paymentModel.setPaymentRequestDate(new Date().getTime());
         paymentModel.setPaymentCompletionDate(new Date().getTime());
         paymentModel.setReceiverAccount(accountReceiveModelOptional.get());
@@ -117,9 +131,6 @@ public class PaymentController {
         accountReceiveModelOptional.get()
                 .setBalance(accountReceiveModelOptional.get().getBalance().add(paymentModel.getAmountPaid()));
 
-        // knownPixModel.setIdAccount(accountSenderModelOptional.get().getIdAccount());
-        // knownPixModel.setIdKey(pixModelOptional.get().getIdPix());
-
         System.out.println("Sender: " + accountSenderModelOptional.get().getIdAccount());
         System.out.println("Receiver: " + accountReceiveModelOptional.get().getIdAccount());
 
@@ -128,6 +139,6 @@ public class PaymentController {
         accountService.updateBalanceReceive(accountReceiveModelOptional.get());
 
         return ResponseEntity.status(HttpStatus.OK).body(paymentModel);
-    }*/
+    }
 
 }

@@ -21,10 +21,13 @@ public class RabbitmqConfig {
     private String exchangeAccountEvent;
 
     @Value(value = "${broker.exchange.paymentSenderExchange}")
-    private String excchangePaymentSender;
+    private String exchangePaymentSender;
 
     @Value(value = "${broker.exchange.paymentSenderExchange}")
-    private String excchangePaymentReceiver;
+    private String exchangePaymentReceiver;
+
+    @Value(value = "${broker.exchange.paymentEventExchange}")
+    private String exchangePayment;
 
     @Bean
     public RabbitTemplate rabbitTemplate() {
@@ -44,5 +47,20 @@ public class RabbitmqConfig {
     @Bean
     public FanoutExchange fanoutExchangeAccount() {
         return new FanoutExchange(exchangeAccountEvent);
+    }
+
+    @Bean
+    public FanoutExchange fanoutExchangePayment() {
+        return new FanoutExchange(exchangePayment);
+    }
+
+    @Bean
+    public FanoutExchange fanoutExchangePaymentReceive() {
+        return new FanoutExchange(exchangePaymentReceiver);
+    }
+
+    @Bean
+    public FanoutExchange fanoutExchangePaymentSender() {
+        return new FanoutExchange(exchangePaymentSender);
     }
 }

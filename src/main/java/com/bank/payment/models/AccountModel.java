@@ -35,9 +35,6 @@ public class AccountModel implements Serializable {
     @Column(nullable = false)
     private BigDecimal balance;
 
-    @Column()
-    private Long accountNumber;
-
     @Column(nullable = false)
     private Long createdAt;
 

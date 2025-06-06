@@ -23,7 +23,18 @@ public class AccountConsumer {
     public void listenAccountEvent(@Payload AccountEventDto accountEventDto) {
         var accountModel = accountEventDto.convertToAccountModel();
 
-        accountService.save(accountModel);
+        switch (ActionType.valueOf(accountEventDto.getActionType())) {
+
+            case CREATE:
+                accountService.save(accountModel);
+                break;
+            case UPDATE:
+                accountService.save(accountModel);
+                break;
+            default:
+                break;
+        }
+        System.out.println(accountModel);
 
     }
 

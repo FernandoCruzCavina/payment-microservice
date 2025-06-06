@@ -13,7 +13,6 @@ public class AccountEventDto {
 
     private Long idAccount;
     private BigDecimal balance;
-    private String accountNumber;
     private Long createdAt;
     private Long lastUpdatedAt;
     private String imageUrl;
