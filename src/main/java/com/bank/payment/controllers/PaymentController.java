@@ -82,17 +82,11 @@ public class PaymentController {
         Optional<AccountModel> accountReceiveModelOptional = accountService.findByPixKey(pixKey);
         Optional<PixModel> pixModelOptional = pixService.findByKey(pixKey);
 
-        if (!accountSenderModelOptional.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Account sender not found!");
+        ResponseEntity<Object> validationPresent = paymentService.validatePresence(idAccount, pixKey);
+        if (validationPresent != null) {
+            return validationPresent;
         }
 
-        if (!pixModelOptional.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Pix not found!");
-        }
-
-        if (!accountReceiveModelOptional.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Account receiver not found!");
-        }
         Optional<KnownPixModel> knownPixModelExists = knownPixService.existsByIdAccountAndPixKey(idAccount,
                 pixModelOptional.get().getKey());
 
@@ -134,7 +128,7 @@ public class PaymentController {
         System.out.println("Sender: " + accountSenderModelOptional.get().getIdAccount());
         System.out.println("Receiver: " + accountReceiveModelOptional.get().getIdAccount());
 
-        paymentService.save(paymentModel);
+        paymentService.savePayment(paymentModel);
         accountService.updateBalanceSender(accountSenderModelOptional.get());
         accountService.updateBalanceReceive(accountReceiveModelOptional.get());
 

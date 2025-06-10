@@ -60,6 +60,9 @@ public class PaymentModel implements Serializable {
         var paymentEventDto = new PaymentEventDto();
 
         BeanUtils.copyProperties(this, paymentEventDto);
+        paymentEventDto.setReceiverAccount(this.getReceiverAccount().getIdAccount());
+        paymentEventDto.setSenderAccount(this.getSenderAccount().getIdAccount());
+        paymentEventDto.setPaymentDescription(this.paymentDescription);
         return paymentEventDto;
     }
 }

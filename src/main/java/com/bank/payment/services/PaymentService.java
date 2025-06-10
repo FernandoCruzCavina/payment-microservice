@@ -3,6 +3,8 @@ package com.bank.payment.services;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.http.ResponseEntity;
+
 import com.bank.payment.models.PaymentModel;
 
 public interface PaymentService {
@@ -17,4 +19,5 @@ public interface PaymentService {
 
     PaymentModel savePayment(PaymentModel paymentModel);
 
+    ResponseEntity<Object> validatePresence(Long idAccount, String pixKey);
 }
