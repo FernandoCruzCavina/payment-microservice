@@ -1,20 +1,15 @@
 package com.bank.payment.services.impl;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import com.bank.payment.dtos.ConclusionPaymentDto;
-import com.bank.payment.dtos.PaymentDto;
 import com.bank.payment.enums.PaymentType;
 import com.bank.payment.models.AccountModel;
 import com.bank.payment.models.KnownPixModel;
@@ -99,6 +94,15 @@ public class PaymentServiceImpl implements PaymentService {
         if (!accountReceiveModelOptional.isPresent()) {
             return "Account receiver not found!";
         }
+
+        if(accountSenderModelOptional.get().getIdAccount().equals(accountReceiveModelOptional.get().getIdAccount())) {
+            return "You cannot send a Pix to yourself!";
+        }
+
+        if (accountSenderModelOptional.get().getBalance().compareTo(BigDecimal.ZERO) <= 0) {
+            return "Insufficient balance to complete the Pix!";
+        }
+
         Optional<KnownPixModel> knownPixModelExists = knownPixService.existsByIdAccountAndPixKey(idAccount,
                 pixModelOptional.get().getKey());
 
