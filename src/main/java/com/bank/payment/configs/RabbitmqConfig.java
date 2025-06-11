@@ -1,6 +1,7 @@
 package com.bank.payment.configs;
 
 import org.springframework.amqp.core.FanoutExchange;
+import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -28,6 +29,12 @@ public class RabbitmqConfig {
 
     @Value(value = "${broker.exchange.paymentEventExchange}")
     private String exchangePayment;
+
+    @Value("${broker.queue.requestNewCode}")
+    public String requestNewCodeQueue;
+
+    @Value("${broker.queue.sendPayment}")
+    public String sendPaymentQueue;
 
     @Bean
     public RabbitTemplate rabbitTemplate() {
@@ -62,5 +69,15 @@ public class RabbitmqConfig {
     @Bean
     public FanoutExchange fanoutExchangePaymentSender() {
         return new FanoutExchange(exchangePaymentSender);
+    }
+
+    @Bean
+    public Queue requestNewCodeQueue() {
+        return new Queue(requestNewCodeQueue, true);
+    }
+
+    @Bean
+    public Queue sendPaymentQueue() {
+        return new Queue(sendPaymentQueue, true);
     }
 }

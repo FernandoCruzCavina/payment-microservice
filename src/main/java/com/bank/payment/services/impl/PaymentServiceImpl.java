@@ -1,17 +1,27 @@
 package com.bank.payment.services.impl;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 
+import com.bank.payment.dtos.ConclusionPaymentDto;
+import com.bank.payment.dtos.PaymentDto;
+import com.bank.payment.enums.PaymentType;
 import com.bank.payment.models.AccountModel;
+import com.bank.payment.models.KnownPixModel;
 import com.bank.payment.models.PaymentModel;
 import com.bank.payment.models.PixModel;
 import com.bank.payment.publishers.PaymentEventPublisher;
+import com.bank.payment.publishers.PaymentGenerateCodePublisher;
 import com.bank.payment.repository.PaymentRepository;
 import com.bank.payment.services.AccountService;
 import com.bank.payment.services.KnownPixService;
@@ -28,6 +38,9 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Autowired
     PaymentEventPublisher paymentEventPublisher;
+
+    @Autowired
+    PaymentGenerateCodePublisher paymentGenerateCodePublisher;
 
     @Autowired
     AccountService accountService;
@@ -70,24 +83,74 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public ResponseEntity<Object> validatePresence(Long idAccount, String pixKey) {
+    public String analyzePayment(Long idAccount, String pixKey, String email){
         Optional<AccountModel> accountSenderModelOptional = accountService.findById(idAccount);
         Optional<AccountModel> accountReceiveModelOptional = accountService.findByPixKey(pixKey);
         Optional<PixModel> pixModelOptional = pixService.findByKey(pixKey);
-
+        System.out.println(email + "\n");
         if (!accountSenderModelOptional.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Account sender not found!");
+            return "Account sender not found!";
         }
 
         if (!pixModelOptional.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Pix not found!");
+            return "Pix not found!";
         }
 
         if (!accountReceiveModelOptional.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Account receiver not found!");
+            return "Account receiver not found!";
+        }
+        Optional<KnownPixModel> knownPixModelExists = knownPixService.existsByIdAccountAndPixKey(idAccount,
+                pixModelOptional.get().getKey());
+
+        long sevenDaysAgoEpoch = java.time.Instant.now().minus(java.time.Duration.ofDays(7)).getEpochSecond();
+
+        System.out.println(sevenDaysAgoEpoch);
+        
+        if (accountReceiveModelOptional.get().getCreatedAt() >= sevenDaysAgoEpoch) {
+            paymentGenerateCodePublisher.publishEventNewCodeConfirmation(email);
+            return "The account that will receive the Pix was created less than 7 days ago.";
         }
 
-        return null;
+        if (!knownPixModelExists.isPresent()) {
+            var knownPixModel = new KnownPixModel();
+
+            knownPixModel.setIdAccount(accountSenderModelOptional.get().getIdAccount());
+            knownPixModel.setPixKey(pixModelOptional.get().getKey());
+            knownPixService.save(knownPixModel);
+
+            paymentGenerateCodePublisher.publishEventNewCodeConfirmation(email);
+            return "Você nunca fez um pix para essa chave, deseja continuar?";
+        }
+        
+        paymentGenerateCodePublisher.publishEventNewCodeConfirmation(email);
+        return "Você realmente deseja fazer esse pagamento?";
+    }
+
+    public void sendPix(ConclusionPaymentDto paymentDto){
+        var paymentModel = new PaymentModel();
+        Optional<AccountModel> accountSenderModelOptional = accountService.findById(paymentDto.idAccount());
+        Optional<AccountModel> accountReceiveModelOptional = accountService.findByPixKey(paymentDto.pixKey());
+        // Optional<PixModel> pixModelOptional = pixService.findByKey(pixKey);
+
+        BeanUtils.copyProperties(paymentDto, paymentModel);
+        paymentModel.setPaymentRequestDate(new Date().getTime());
+        paymentModel.setPaymentCompletionDate(new Date().getTime());
+        paymentModel.setReceiverAccount(accountReceiveModelOptional.get());
+        paymentModel.setSenderAccount(accountSenderModelOptional.get());
+        paymentModel.setPaymentType(PaymentType.PIX);
+
+        accountSenderModelOptional.get()
+                .setBalance(accountSenderModelOptional.get().getBalance().subtract(paymentModel.getAmountPaid()));
+
+        accountReceiveModelOptional.get()
+                .setBalance(accountReceiveModelOptional.get().getBalance().add(paymentModel.getAmountPaid()));
+
+        System.out.println("Sender: " + accountSenderModelOptional.get().getIdAccount());
+        System.out.println("Receiver: " + accountReceiveModelOptional.get().getIdAccount());
+
+        savePayment(paymentModel);
+        accountService.updateBalanceSender(accountSenderModelOptional.get());
+        accountService.updateBalanceReceive(accountReceiveModelOptional.get());
     }
 
 }

@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.bank.payment.dtos.PaymentDto;
+import com.bank.payment.dtos.SendEmaiDto;
 import com.bank.payment.enums.CurrencyType;
 import com.bank.payment.enums.PaymentType;
 import com.bank.payment.models.AccountModel;
@@ -74,74 +75,20 @@ public class PaymentController {
         }
     }
 
-    @PostMapping("/{idAccount}/pix/{pixKey}/confirm")
-    public ResponseEntity<Object> confirmPix(@PathVariable(value = "idAccount") Long idAccount,
-            @PathVariable(value = "pixKey") String pixKey, @RequestBody @Validated PaymentDto paymentDto) {
-        var paymentModel = new PaymentModel();
-        Optional<AccountModel> accountSenderModelOptional = accountService.findById(idAccount);
-        Optional<AccountModel> accountReceiveModelOptional = accountService.findByPixKey(pixKey);
-        Optional<PixModel> pixModelOptional = pixService.findByKey(pixKey);
+    // @PostMapping("/{idAccount}/pix/{pixKey}/confirm")
+    // public ResponseEntity<Object> confirmPix(@PathVariable(value = "idAccount") Long idAccount,
+    //         @PathVariable(value = "pixKey") String pixKey, @RequestBody @Validated PaymentDto paymentDto) {
+        
 
-        BeanUtils.copyProperties(paymentDto, paymentModel);
-        paymentModel.setPaymentRequestDate(new Date().getTime());
-        paymentModel.setPaymentCompletionDate(new Date().getTime());
-        paymentModel.setReceiverAccount(accountReceiveModelOptional.get());
-        paymentModel.setSenderAccount(accountSenderModelOptional.get());
-        paymentModel.setPaymentType(PaymentType.PIX);
-
-        accountSenderModelOptional.get()
-                .setBalance(accountSenderModelOptional.get().getBalance().subtract(paymentModel.getAmountPaid()));
-
-        accountReceiveModelOptional.get()
-                .setBalance(accountReceiveModelOptional.get().getBalance().add(paymentModel.getAmountPaid()));
-
-        System.out.println("Sender: " + accountSenderModelOptional.get().getIdAccount());
-        System.out.println("Receiver: " + accountReceiveModelOptional.get().getIdAccount());
-
-        paymentService.savePayment(paymentModel);
-        accountService.updateBalanceSender(accountSenderModelOptional.get());
-        accountService.updateBalanceReceive(accountReceiveModelOptional.get());
-
-        return ResponseEntity.status(HttpStatus.OK).body(paymentModel);
-    }
+    //     return ResponseEntity.status(HttpStatus.OK).body("paymentModel");
+    // }
 
     @PostMapping("/{idAccount}/pix/{pixKey}")
-    public ResponseEntity<Object> sendPix(@PathVariable(value = "idAccount") Long idAccount,
-            @PathVariable(value = "pixKey") String pixKey, @RequestBody @Validated PaymentDto paymentDto) {
-        Optional<AccountModel> accountSenderModelOptional = accountService.findById(idAccount);
-        Optional<AccountModel> accountReceiveModelOptional = accountService.findByPixKey(pixKey);
-        Optional<PixModel> pixModelOptional = pixService.findByKey(pixKey);
+    public ResponseEntity<Object> analyzePayment(@PathVariable(value = "idAccount") Long idAccount,
+            @PathVariable(value = "pixKey") String pixKey, @RequestBody SendEmaiDto email) {
+        String response = paymentService.analyzePayment(idAccount, pixKey, email.email());
 
-        ResponseEntity<Object> validationPresent = paymentService.validatePresence(idAccount, pixKey);
-        if (validationPresent != null) {
-            return validationPresent;
-        }
-
-        Optional<KnownPixModel> knownPixModelExists = knownPixService.existsByIdAccountAndPixKey(idAccount,
-                pixModelOptional.get().getKey());
-
-        long sevenDaysAgoEpoch = java.time.Instant.now().minus(java.time.Duration.ofDays(7)).getEpochSecond();
-
-        System.out.println(sevenDaysAgoEpoch);
-
-        if (accountReceiveModelOptional.get().getCreatedAt() >= sevenDaysAgoEpoch) {
-            return ResponseEntity.status(HttpStatus.LOCKED)
-                    .body("The account that will receive the Pix was created less than 7 days ago.");
-        }
-
-        if (!knownPixModelExists.isPresent()) {
-            var knownPixModel = new KnownPixModel();
-
-            knownPixModel.setIdAccount(accountSenderModelOptional.get().getIdAccount());
-            knownPixModel.setPixKey(pixModelOptional.get().getKey());
-            knownPixService.save(knownPixModel);
-
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Você nunca fez um pix para essa chave, deseja continuar?");
-        }
-
-        return ResponseEntity.status(HttpStatus.OK).body("");
-
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
 }

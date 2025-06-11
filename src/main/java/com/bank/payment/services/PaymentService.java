@@ -4,7 +4,12 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 
+import com.bank.payment.dtos.ConclusionPaymentDto;
+import com.bank.payment.dtos.PaymentDto;
 import com.bank.payment.models.PaymentModel;
 
 public interface PaymentService {
@@ -19,5 +24,7 @@ public interface PaymentService {
 
     PaymentModel savePayment(PaymentModel paymentModel);
 
-    ResponseEntity<Object> validatePresence(Long idAccount, String pixKey);
+    String analyzePayment(Long idAccount, String pixKey, String email);
+
+    void sendPix(ConclusionPaymentDto paymentDto);
 }
