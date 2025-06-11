@@ -31,7 +31,6 @@ import com.bank.payment.services.PaymentService;
 import com.bank.payment.services.PixService;
 
 @RestController
-@CrossOrigin(origins = "*")
 @RequestMapping()
 public class PaymentController {
 
@@ -75,42 +74,13 @@ public class PaymentController {
         }
     }
 
-    @PostMapping("/{idAccount}/pix/{pixKey}")
-    public ResponseEntity<Object> sendPix(@PathVariable(value = "idAccount") Long idAccount,
+    @PostMapping("/{idAccount}/pix/{pixKey}/confirm")
+    public ResponseEntity<Object> confirmPix(@PathVariable(value = "idAccount") Long idAccount,
             @PathVariable(value = "pixKey") String pixKey, @RequestBody @Validated PaymentDto paymentDto) {
+        var paymentModel = new PaymentModel();
         Optional<AccountModel> accountSenderModelOptional = accountService.findById(idAccount);
         Optional<AccountModel> accountReceiveModelOptional = accountService.findByPixKey(pixKey);
         Optional<PixModel> pixModelOptional = pixService.findByKey(pixKey);
-
-        ResponseEntity<Object> validationPresent = paymentService.validatePresence(idAccount, pixKey);
-        if (validationPresent != null) {
-            return validationPresent;
-        }
-
-        Optional<KnownPixModel> knownPixModelExists = knownPixService.existsByIdAccountAndPixKey(idAccount,
-                pixModelOptional.get().getKey());
-
-        if (!knownPixModelExists.isPresent()) {
-            var knownPixModel = new KnownPixModel();
-
-            knownPixModel.setIdAccount(accountSenderModelOptional.get().getIdAccount());
-            knownPixModel.setPixKey(pixModelOptional.get().getKey());
-            knownPixService.save(knownPixModel);
-
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("You have never sent a Pix to this person before. Do you want to proceed?");
-        }
-
-        var paymentModel = new PaymentModel();
-
-        // long sevenDaysAgoEpoch =
-        // java.time.Instant.now().minus(java.time.Duration.ofDays(7)).getEpochSecond();
-
-        // if (accountReceiveModelOptional.get().getCreatedAt() >= sevenDaysAgoEpoch) {
-        // return ResponseEntity.status(HttpStatus.LOCKED)
-        // .body("The account that will receive the Pix was created less than 7 days
-        // ago.");
-        // }
 
         BeanUtils.copyProperties(paymentDto, paymentModel);
         paymentModel.setPaymentRequestDate(new Date().getTime());
@@ -133,6 +103,45 @@ public class PaymentController {
         accountService.updateBalanceReceive(accountReceiveModelOptional.get());
 
         return ResponseEntity.status(HttpStatus.OK).body(paymentModel);
+    }
+
+    @PostMapping("/{idAccount}/pix/{pixKey}")
+    public ResponseEntity<Object> sendPix(@PathVariable(value = "idAccount") Long idAccount,
+            @PathVariable(value = "pixKey") String pixKey, @RequestBody @Validated PaymentDto paymentDto) {
+        Optional<AccountModel> accountSenderModelOptional = accountService.findById(idAccount);
+        Optional<AccountModel> accountReceiveModelOptional = accountService.findByPixKey(pixKey);
+        Optional<PixModel> pixModelOptional = pixService.findByKey(pixKey);
+
+        ResponseEntity<Object> validationPresent = paymentService.validatePresence(idAccount, pixKey);
+        if (validationPresent != null) {
+            return validationPresent;
+        }
+
+        Optional<KnownPixModel> knownPixModelExists = knownPixService.existsByIdAccountAndPixKey(idAccount,
+                pixModelOptional.get().getKey());
+
+        long sevenDaysAgoEpoch = java.time.Instant.now().minus(java.time.Duration.ofDays(7)).getEpochSecond();
+
+        System.out.println(sevenDaysAgoEpoch);
+
+        if (accountReceiveModelOptional.get().getCreatedAt() >= sevenDaysAgoEpoch) {
+            return ResponseEntity.status(HttpStatus.LOCKED)
+                    .body("The account that will receive the Pix was created less than 7 days ago.");
+        }
+
+        if (!knownPixModelExists.isPresent()) {
+            var knownPixModel = new KnownPixModel();
+
+            knownPixModel.setIdAccount(accountSenderModelOptional.get().getIdAccount());
+            knownPixModel.setPixKey(pixModelOptional.get().getKey());
+            knownPixService.save(knownPixModel);
+
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Você nunca fez um pix para essa chave, deseja continuar?");
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body("");
+
     }
 
 }
