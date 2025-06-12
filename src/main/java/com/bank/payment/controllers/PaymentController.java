@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.bank.payment.dtos.PaymentDto;
 import com.bank.payment.dtos.SendEmaiDto;
 import com.bank.payment.models.PaymentModel;
 import com.bank.payment.services.AccountService;
@@ -75,8 +77,8 @@ public class PaymentController {
 
     @PostMapping("/{idAccount}/pix/{pixKey}/direct")
     public ResponseEntity<Object> directPayment(@PathVariable(value = "idAccount") Long idAccount,
-            @PathVariable(value = "pixKey") String pixKey, @RequestBody SendEmaiDto email) {
-        String response = paymentService.analyzePayment(idAccount, pixKey, email.email());
+            @PathVariable(value = "pixKey") String pixKey, @RequestBody @Validated PaymentDto paymentDto) {
+        String response = paymentService.directPayment(idAccount, pixKey, paymentDto);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
