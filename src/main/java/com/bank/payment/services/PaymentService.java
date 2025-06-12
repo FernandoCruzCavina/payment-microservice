@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.bank.payment.dtos.ConclusionPaymentDto;
+import com.bank.payment.dtos.PaymentDto;
 import com.bank.payment.models.PaymentModel;
 
 public interface PaymentService {
@@ -21,4 +22,6 @@ public interface PaymentService {
     String analyzePayment(Long idAccount, String pixKey, String email);
 
     void sendPix(ConclusionPaymentDto paymentDto);
+
+    String directPayment(Long idAccount, String pixKey, PaymentDto paymentDto);
 }

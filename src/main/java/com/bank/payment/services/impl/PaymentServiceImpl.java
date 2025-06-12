@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.bank.payment.dtos.ConclusionPaymentDto;
+import com.bank.payment.dtos.PaymentDto;
 import com.bank.payment.enums.PaymentType;
 import com.bank.payment.models.AccountModel;
 import com.bank.payment.models.KnownPixModel;
@@ -126,7 +127,7 @@ public class PaymentServiceImpl implements PaymentService {
             return "Você nunca fez um pix para essa chave, deseja continuar?";
         }
         
-        paymentGenerateCodePublisher.publishEventNewCodeConfirmation(email);
+        // paymentGenerateCodePublisher.publishEventNewCodeConfirmation(email);
         return "Você realmente deseja fazer esse pagamento?";
     }
 
@@ -134,7 +135,6 @@ public class PaymentServiceImpl implements PaymentService {
         var paymentModel = new PaymentModel();
         Optional<AccountModel> accountSenderModelOptional = accountService.findById(paymentDto.idAccount());
         Optional<AccountModel> accountReceiveModelOptional = accountService.findByPixKey(paymentDto.pixKey());
-        // Optional<PixModel> pixModelOptional = pixService.findByKey(pixKey);
 
         BeanUtils.copyProperties(paymentDto, paymentModel);
         paymentModel.setPaymentRequestDate(new Date().getTime());
@@ -157,4 +157,39 @@ public class PaymentServiceImpl implements PaymentService {
         accountService.updateBalanceReceive(accountReceiveModelOptional.get());
     }
 
+    public String directPayment(Long idAccount, String pixKey, PaymentDto paymentDto){
+        var paymentModel = new PaymentModel();
+        Optional<AccountModel> accountSenderModelOptional = accountService.findById(idAccount);
+        Optional<AccountModel> accountReceiveModelOptional = accountService.findByPixKey(pixKey);
+        Optional<PixModel> pixModelOptional = pixService.findByKey(pixKey);
+
+        Optional<KnownPixModel> knownPixModelExists = knownPixService.existsByIdAccountAndPixKey(idAccount,
+                pixModelOptional.get().getKey());
+
+        if(!knownPixModelExists.isPresent()){
+            return null;
+        }
+
+        BeanUtils.copyProperties(paymentDto, paymentModel);
+        paymentModel.setPaymentRequestDate(new Date().getTime());
+        paymentModel.setPaymentCompletionDate(new Date().getTime());
+        paymentModel.setReceiverAccount(accountReceiveModelOptional.get());
+        paymentModel.setSenderAccount(accountSenderModelOptional.get());
+        paymentModel.setPaymentType(PaymentType.PIX);
+
+        accountSenderModelOptional.get()
+                .setBalance(accountSenderModelOptional.get().getBalance().subtract(paymentModel.getAmountPaid()));
+
+        accountReceiveModelOptional.get()
+                .setBalance(accountReceiveModelOptional.get().getBalance().add(paymentModel.getAmountPaid()));
+
+        System.out.println("Sender: " + accountSenderModelOptional.get().getIdAccount());
+        System.out.println("Receiver: " + accountReceiveModelOptional.get().getIdAccount());
+
+        savePayment(paymentModel);
+        accountService.updateBalanceSender(accountSenderModelOptional.get());
+        accountService.updateBalanceReceive(accountReceiveModelOptional.get());
+
+        return "O pagamento foi realizado com sucesso!";
+    }
 }

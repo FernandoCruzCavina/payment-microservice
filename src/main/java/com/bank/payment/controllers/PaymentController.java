@@ -73,4 +73,11 @@ public class PaymentController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    @PostMapping("/{idAccount}/pix/{pixKey}/direct")
+    public ResponseEntity<Object> directPayment(@PathVariable(value = "idAccount") Long idAccount,
+            @PathVariable(value = "pixKey") String pixKey, @RequestBody SendEmaiDto email) {
+        String response = paymentService.analyzePayment(idAccount, pixKey, email.email());
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
 }
