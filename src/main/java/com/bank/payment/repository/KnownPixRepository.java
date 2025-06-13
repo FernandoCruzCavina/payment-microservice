@@ -8,5 +8,5 @@ import com.bank.payment.models.KnownPixModel;
 
 public interface KnownPixRepository extends JpaRepository<KnownPixModel, Long> {
 
-    Optional<KnownPixModel> existsByIdAccountAndPixKey(Long idAccount, String pixKey);
+    Optional<KnownPixModel> findByIdAccountAndPixKey(Long idAccount, String pixKey);
 }

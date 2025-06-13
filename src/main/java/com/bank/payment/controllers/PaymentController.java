@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.bank.payment.dtos.PaymentAnalyzeDto;
 import com.bank.payment.dtos.PaymentDto;
-import com.bank.payment.dtos.SendEmaiDto;
 import com.bank.payment.models.PaymentModel;
 import com.bank.payment.services.AccountService;
 import com.bank.payment.services.KnownPixService;
@@ -46,31 +46,23 @@ public class PaymentController {
 
     @GetMapping("/{idPayment}")
     public ResponseEntity<Object> getOnePayment(@PathVariable(value = "idPayment") Long idPayment) {
-        Optional<PaymentModel> paymentModelOptional = paymentService.findById(idPayment);
+        PaymentModel paymentModel = paymentService.findById(idPayment);
 
-        if (!paymentModelOptional.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Payment not found");
-        } else {
-            return ResponseEntity.status(HttpStatus.OK).body(paymentModelOptional.get());
-        }
+        return ResponseEntity.status(HttpStatus.OK).body(paymentModel);
     }
 
     @DeleteMapping("/{idPayment}")
     public ResponseEntity<Object> deletePayment(@PathVariable(value = "idPayment") Long idPayment) {
-        Optional<PaymentModel> paymentModelOptional = paymentService.findById(idPayment);
+        String response = paymentService.delete(idPayment); 
 
-        if (!paymentModelOptional.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Payment not found");
-        } else {
-            paymentService.delete(paymentModelOptional.get());
-            return ResponseEntity.status(HttpStatus.OK).body("Payment deleted sucessed");
-        }
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+        
     }
 
     @PostMapping("/{idAccount}/pix/{pixKey}")
     public ResponseEntity<Object> analyzePayment(@PathVariable(value = "idAccount") Long idAccount,
-            @PathVariable(value = "pixKey") String pixKey, @RequestBody SendEmaiDto email) {
-        String response = paymentService.analyzePayment(idAccount, pixKey, email.email());
+            @PathVariable(value = "pixKey") String pixKey, @RequestBody PaymentAnalyzeDto paymentDto) {
+        String response = paymentService.analyzePayment(idAccount, pixKey, paymentDto);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
