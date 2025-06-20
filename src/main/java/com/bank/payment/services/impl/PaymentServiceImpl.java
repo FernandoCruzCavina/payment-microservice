@@ -100,9 +100,9 @@ public class PaymentServiceImpl implements PaymentService {
         PixModel pixModel = pixService.findByKey(pixKey)
                 .orElseThrow(PixNotFoundException::new);
 
-        // if(accountSenderModel.getIdAccount().equals(accountSenderModel.getIdAccount())) {
-        //     throw new TransferBalanceToYourselfException();
-        // }
+        if(accountSenderModel.getIdAccount()==accountReceiveModel.getIdAccount()) {
+            throw new TransferBalanceToYourselfException();
+        }
 
         if (accountSenderModel.getBalance().compareTo(paymentAnalyzeDto.amountPaid()) <= 0) {
             throw new TransferInsuficientBalanceException();

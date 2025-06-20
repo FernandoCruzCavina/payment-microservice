@@ -16,4 +16,9 @@ public class PaymentDto {
 
     private BigDecimal amountPaid;
 
+    public PaymentDto(String paymentDescription, BigDecimal amountPaid) {
+        this.paymentDescription = paymentDescription;
+        this.amountPaid = amountPaid;
+    }
+
 }
