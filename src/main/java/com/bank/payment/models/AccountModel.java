@@ -20,6 +20,16 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Represents an account in the payment microservice.
+ * This model is used to store account information such as balance, creation date,
+ * last updated date, and associated payments.
+ * 
+ * @author Fernando Cruz Cavina
+ * @version 1.0.0, 06/26/2025
+ * @see PaymentModel
+ * @since 1.0.0
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -52,7 +62,7 @@ public class AccountModel implements Serializable {
     @OneToMany(mappedBy = "receiverAccount", fetch = FetchType.LAZY)
     Set<PaymentModel> receivePayment;
 
-    public AccountEventDto convertToAccountEventDto() {
+    public AccountEventDto toAccountEventDto() {
         var accountEventDto = new AccountEventDto();
 
         BeanUtils.copyProperties(this, accountEventDto);

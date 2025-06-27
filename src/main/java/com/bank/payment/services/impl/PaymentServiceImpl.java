@@ -1,7 +1,6 @@
 package com.bank.payment.services.impl;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.BeanUtils;
@@ -55,11 +54,6 @@ public class PaymentServiceImpl implements PaymentService {
     PixService pixService;
 
     @Override
-    public List<PaymentModel> findAll() {
-        return paymentRepository.findAll();
-    }
-
-    @Override
     public PaymentModel findById(Long idPayment) {
         PaymentModel paymentModel = paymentRepository.findById(idPayment)
                 .orElseThrow(PaymentNotFoundException::new);
@@ -75,15 +69,10 @@ public class PaymentServiceImpl implements PaymentService {
         return "Pagamento deletado com sucesso.";
     }
 
-    @Override
-    public PaymentModel save(PaymentModel paymentModel) {
-        return paymentRepository.save(paymentModel);
-    }
-
     @Transactional
     @Override
     public PaymentModel savePayment(PaymentModel paymentModel) {
-        save(paymentModel);
+        paymentRepository.save(paymentModel);
 
         paymentEventPublisher.publishPaymentEvent(paymentModel.convertToPaymentEventDto());
         paymentEventPublisher.publishPaymentEvent(paymentModel.convertToPaymentEventDto());
@@ -92,7 +81,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public String analyzePayment(Long idAccount, String pixKey, PaymentAnalyzeDto paymentAnalyzeDto){
+    public String reviewPaymentBeforeProcessing(Long idAccount, String pixKey, PaymentAnalyzeDto paymentAnalyzeDto){
         AccountModel accountSenderModel = accountService.findById(idAccount)
                 .orElseThrow(AccountSenderNotFoundException::new);
         AccountModel accountReceiveModel = accountService.findByPixKey(pixKey)
@@ -134,7 +123,7 @@ public class PaymentServiceImpl implements PaymentService {
         // paymentGenerateCodePublisher.publishEventNewCodeConfirmation(paymentAnalyzeDto.email());
         return "Você realmente deseja fazer esse pagamento?";
     }
-
+    
     public void sendPix(ConclusionPaymentDto paymentDto){
         var paymentModel = new PaymentModel();
         AccountModel accountSenderModel = accountService.findById(paymentDto.idAccount())
@@ -150,7 +139,6 @@ public class PaymentServiceImpl implements PaymentService {
         paymentModel.setPaymentType(PaymentType.PIX);
 
         accountSenderModel.setBalance(accountSenderModel.getBalance().subtract(paymentModel.getAmountPaid()));
-
         accountReceiveModel.setBalance(accountReceiveModel.getBalance().add(paymentModel.getAmountPaid()));
 
         System.out.println("Sender: " + accountSenderModel.getIdAccount());

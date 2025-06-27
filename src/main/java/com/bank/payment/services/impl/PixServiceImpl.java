@@ -10,7 +10,7 @@ import com.bank.payment.repository.PixRepository;
 import com.bank.payment.services.PixService;
 
 @Service
-public class PixServiceImp implements PixService {
+public class PixServiceImpl implements PixService {
     @Autowired
     PixRepository pixRepository;
 

@@ -12,7 +12,16 @@ import org.springframework.context.annotation.Configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
+/**
+ * Configuration class for RabbitMQ setup in the payment microservice.
+ * <p>
+ * This class defines the RabbitMQ connection factory, message converter, exchanges, and queues used in the payment microservice.
+ * It uses Jackson for JSON message conversion and sets up fanout exchanges for different event types.
+ * 
+ * @author Fernando Cruz Cavina
+ * @version 1.0.0, 06/26/2025
+ * @since 1.0.0
+ */
 @Configuration
 public class RabbitmqConfig {
     @Autowired

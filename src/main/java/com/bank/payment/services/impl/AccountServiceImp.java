@@ -52,7 +52,7 @@ public class AccountServiceImp implements AccountService {
 
         System.out.println("Enviando evento para: " + accountModel.getIdAccount());
 
-        paymentSenderEventPublisher.publishPaymentSenderEvent(accountModel.convertToAccountEventDto(),
+        paymentSenderEventPublisher.publishPaymentSenderEvent(accountModel.toAccountEventDto(),
                 ActionType.PAYMENT);
         return accountModel;
     }
@@ -63,7 +63,7 @@ public class AccountServiceImp implements AccountService {
 
         System.out.println("Enviando evento para: " + accountModel.getIdAccount());
 
-        paymentReceiverEventPublisher.publishPaymentReceiverEvent(accountModel.convertToAccountEventDto(),
+        paymentReceiverEventPublisher.publishPaymentReceiverEvent(accountModel.toAccountEventDto(),
                 ActionType.PAYMENT);
         return accountModel;
     }

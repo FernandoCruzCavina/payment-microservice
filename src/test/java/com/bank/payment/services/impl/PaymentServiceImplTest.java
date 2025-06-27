@@ -23,6 +23,9 @@ import java.math.BigDecimal;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -77,9 +80,9 @@ public class PaymentServiceImplTest {
         verify(paymentEventPublisher, times(2)).publishPaymentEvent(any());
     }
 
-    // --- Success test for analyzePayment ---
+    // --- Success test for reviewPaymentBeforeProcessing ---
     @Test
-    void analyzePayment_shouldReturnConfirmationMessage() {
+    void reviewPaymentBeforeProcessing_shouldReturnConfirmationMessage() {
         Long idAccount = 1L;
         String pixKey = "pixkey";
         PaymentAnalyzeDto dto = new PaymentAnalyzeDto("email@test.com", BigDecimal.TEN, "Pagamento de teste");
@@ -99,24 +102,24 @@ public class PaymentServiceImplTest {
         when(pixService.findByKey(pixKey)).thenReturn(Optional.of(pixModel));
         when(knownPixService.existsByIdAccountAndPixKey(idAccount, pixKey)).thenReturn(Optional.of(new KnownPixModel()));
 
-        String result = paymentService.analyzePayment(idAccount, pixKey, dto);
+        String result = paymentService.reviewPaymentBeforeProcessing(idAccount, pixKey, dto);
 
         assertEquals("Você realmente deseja fazer esse pagamento?", result);
     }
 
     // --- Exception test: sender not found ---
     @Test
-    void analyzePayment_shouldThrowAccountSenderNotFoundException() {
+    void reviewPaymentBeforeProcessing_shouldThrowAccountSenderNotFoundException() {
         when(accountService.findById(anyLong())).thenReturn(Optional.empty());
 
         PaymentAnalyzeDto dto = new PaymentAnalyzeDto("email", BigDecimal.TEN, "desc");
         assertThrows(AccountSenderNotFoundException.class,
-                () -> paymentService.analyzePayment(1L, "pix", dto));
+                () -> paymentService.reviewPaymentBeforeProcessing(1L, "pix", dto));
     }
 
     // --- Exception test: receiver not found ---
     @Test
-    void analyzePayment_shouldThrowAccountReceiverNotFoundException() {
+    void reviewPaymentBeforeProcessing_shouldThrowAccountReceiverNotFoundException() {
         AccountModel sender = new AccountModel();
         sender.setIdAccount(1L);
         when(accountService.findById(1L)).thenReturn(Optional.of(sender));
@@ -124,12 +127,12 @@ public class PaymentServiceImplTest {
 
         PaymentAnalyzeDto dto = new PaymentAnalyzeDto("email", BigDecimal.TEN, "desc");
         assertThrows(AccountReceiverNotFoundException.class,
-                () -> paymentService.analyzePayment(1L, "pix", dto));
+                () -> paymentService.reviewPaymentBeforeProcessing(1L, "pix", dto));
     }
 
     // --- Exception test: pix not found ---
     @Test
-    void analyzePayment_shouldThrowPixNotFoundException() {
+    void reviewPaymentBeforeProcessing_shouldThrowPixNotFoundException() {
         AccountModel sender = new AccountModel();
         sender.setIdAccount(1L);
         AccountModel receiver = new AccountModel();
@@ -141,12 +144,12 @@ public class PaymentServiceImplTest {
 
         PaymentAnalyzeDto dto = new PaymentAnalyzeDto("email", BigDecimal.TEN, "desc");
         assertThrows(PixNotFoundException.class,
-                () -> paymentService.analyzePayment(1L, "pix", dto));
+                () -> paymentService.reviewPaymentBeforeProcessing(1L, "pix", dto));
     }
 
     // --- Exception test: transfer to yourself ---
     @Test
-    void analyzePayment_shouldThrowTransferBalanceToYourselfException() {
+    void reviewPaymentBeforeProcessing_shouldThrowTransferBalanceToYourselfException() {
         AccountModel sender = new AccountModel();
         sender.setIdAccount(1L);
         AccountModel receiver = new AccountModel();
@@ -161,12 +164,12 @@ public class PaymentServiceImplTest {
 
         PaymentAnalyzeDto dto = new PaymentAnalyzeDto("email", BigDecimal.TEN, "desc");
         assertThrows(TransferBalanceToYourselfException.class,
-                () -> paymentService.analyzePayment(1L, "pix", dto));
+                () -> paymentService.reviewPaymentBeforeProcessing(1L, "pix", dto));
     }
 
     // --- Exception test: insufficient balance ---
     @Test
-    void analyzePayment_shouldThrowTransferInsuficientBalanceException() {
+    void reviewPaymentBeforeProcessing_shouldThrowTransferInsuficientBalanceException() {
         AccountModel sender = new AccountModel();
         sender.setIdAccount(1L);
         sender.setBalance(BigDecimal.ZERO);
@@ -182,7 +185,7 @@ public class PaymentServiceImplTest {
 
         PaymentAnalyzeDto dto = new PaymentAnalyzeDto("email", BigDecimal.TEN, "desc");
         assertThrows(TransferInsuficientBalanceException.class,
-                () -> paymentService.analyzePayment(1L, "pix", dto));
+                () -> paymentService.reviewPaymentBeforeProcessing(1L, "pix", dto));
     }
 
     // --- Exception test: first transfer to pix ---

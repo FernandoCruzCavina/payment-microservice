@@ -11,7 +11,16 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
+/**
+ * Represents a Pix key in the payment microservice.
+ * This model is used to store Pix key information such as the key itself,
+ * creation date, last updated date, and associated account ID. 
+ * 
+ * @author Fernando Cruz Cavina
+ * @version 1.0.0, 06/26/2025
+ * @see AccountModel
+ * @since 1.0.0
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

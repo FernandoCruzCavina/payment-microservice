@@ -7,6 +7,13 @@ import org.springframework.stereotype.Component;
 
 import com.bank.payment.dtos.PaymentEventDto;
 
+/**
+ * Publisher for sending payment-related events to account microservice via RabbitMQ.
+ * 
+ * @author Fernando Cruz Cavina
+ * @version 1.0.0, 06/26/2025
+ * @since 1.0.0
+ */
 @Component
 public class PaymentEventPublisher {
     @Autowired
@@ -15,9 +22,12 @@ public class PaymentEventPublisher {
     @Value(value = "${broker.exchange.paymentEventExchange}")
     private String exchangePaymentEvent;
 
+    /**
+     * Publishes a payment event to the payment event exchange.
+     *
+     * @param paymentEventDto the payment event data
+     */
     public void publishPaymentEvent(PaymentEventDto paymentEventDto) {
         rabbitTemplate.convertAndSend(exchangePaymentEvent, "", paymentEventDto);
-
     }
-
 }
