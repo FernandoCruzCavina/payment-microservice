@@ -1,0 +1,12 @@
+com.bank.payment
+com.bank.payment.configs
+com.bank.payment.consumers
+com.bank.payment.controllers
+com.bank.payment.dtos
+com.bank.payment.enums
+com.bank.payment.exceptions
+com.bank.payment.models
+com.bank.payment.publishers
+com.bank.payment.repository
+com.bank.payment.services
+com.bank.payment.services.impl
