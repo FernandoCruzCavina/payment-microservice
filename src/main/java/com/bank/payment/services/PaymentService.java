@@ -42,11 +42,6 @@ public interface PaymentService {
      * @param pixKey the Pix key of the receiver
      * @param paymentAnalyzeDto the DTO containing payment analysis details
      * @return a String message asking the user to confirm the payment or an error message if the analysis fails
-     * @throws IllegalArgumentException if the payment analysis fails due to insufficient balance or invalid Pix key
-     * @throws AccountNotFoundException if the account with the given ID does not exist
-     * @throws PixKeyNotFoundException if the Pix key does not exist in the system
-     * @throws InsufficientBalanceException if the sender's account has insufficient balance for the payment
-     * @throws InvalidPixKeyException if the Pix key is invalid or does not match the receiver's account
      */
     String reviewPaymentBeforeProcessing(Long idAccount, String pixKey, PaymentAnalyzeDto paymentAnalyzeDto);
 
