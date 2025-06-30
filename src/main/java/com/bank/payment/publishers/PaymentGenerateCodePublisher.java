@@ -15,8 +15,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class PaymentGenerateCodePublisher {
     
-    @Autowired
-    RabbitTemplate rabbitTemplate;
+    private final RabbitTemplate rabbitTemplate;
+
+    public PaymentGenerateCodePublisher(RabbitTemplate rabbitTemplate) {
+        this.rabbitTemplate = rabbitTemplate;
+    }
 
     @Value(value = "${broker.queue.requestNewCode}")
     private String routingKey;

@@ -12,8 +12,12 @@ import com.bank.payment.services.KnownPixService;
 @Service
 public class KnownPixServiceImp implements KnownPixService {
 
-    @Autowired
-    KnownPixRepository knownPixRepository;
+    
+    private final KnownPixRepository knownPixRepository;
+
+    public KnownPixServiceImp(KnownPixRepository knownPixRepository) {
+        this.knownPixRepository = knownPixRepository;
+    }
 
     @Override
     public Optional<KnownPixModel> existsByIdAccountAndPixKey(Long idAccount, String pixKey) {

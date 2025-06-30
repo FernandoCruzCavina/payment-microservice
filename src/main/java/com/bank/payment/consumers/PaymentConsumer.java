@@ -26,8 +26,12 @@ import com.bank.payment.services.PaymentService;
 @Component
 public class PaymentConsumer {
     
-    @Autowired
-    PaymentService paymentService;
+    private final PaymentService paymentService;
+
+    public PaymentConsumer(PaymentService paymentService){
+        this.paymentService = paymentService;
+    }
+
     /**
      * Listens for confirmation of payment and sends the Pix payment.
      *

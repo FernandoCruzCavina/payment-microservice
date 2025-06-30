@@ -2,8 +2,9 @@ name: SonarQube
 on:
   push:
     branches:
-      - main
-      
+      - develop
+  workflow_dispatch:
+    
 jobs:
   build:
     name: Build and analyze
@@ -32,4 +33,4 @@ jobs:
       - name: Build and analyze
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=FernandoCruzCavina_auth-service
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=FernandoCruzCavina_payment-microservice

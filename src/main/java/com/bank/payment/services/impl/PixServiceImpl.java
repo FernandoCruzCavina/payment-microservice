@@ -11,8 +11,12 @@ import com.bank.payment.services.PixService;
 
 @Service
 public class PixServiceImpl implements PixService {
-    @Autowired
-    PixRepository pixRepository;
+    
+    private final PixRepository pixRepository;
+
+    public PixServiceImpl(PixRepository pixRepository) {
+        this.pixRepository = pixRepository;
+    }
 
     @Override
     public PixModel save(PixModel pixModel) {

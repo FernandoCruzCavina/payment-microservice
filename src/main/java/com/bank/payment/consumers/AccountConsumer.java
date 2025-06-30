@@ -32,8 +32,11 @@ import com.bank.payment.services.AccountService;
 @Component
 public class AccountConsumer {
 
-    @Autowired
-    AccountService accountService;
+    private final AccountService accountService;
+    
+    public AccountConsumer(AccountService accountService){
+        this.accountService = accountService;
+    }
 
     /**
      * Listens for account events and saves them according to the action type.

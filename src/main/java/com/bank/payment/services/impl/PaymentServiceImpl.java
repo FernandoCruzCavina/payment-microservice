@@ -2,6 +2,7 @@ package com.bank.payment.services.impl;
 
 import java.util.Date;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,29 +36,33 @@ import jakarta.transaction.Transactional;
 @Service
 public class PaymentServiceImpl implements PaymentService {
 
-    @Autowired
-    PaymentRepository paymentRepository;
+    private final PaymentRepository paymentRepository;
 
-    @Autowired
-    PaymentEventPublisher paymentEventPublisher;
+    private final PaymentEventPublisher paymentEventPublisher;
 
-    @Autowired
-    PaymentGenerateCodePublisher paymentGenerateCodePublisher;
+    private final PaymentGenerateCodePublisher paymentGenerateCodePublisher;
 
-    @Autowired
-    AccountService accountService;
+    private final AccountService accountService;
 
-    @Autowired
-    KnownPixService knownPixService;
+    private final KnownPixService knownPixService;
 
-    @Autowired
-    PixService pixService;
+    private final PixService pixService;
+    
+    Logger logger = Logger.getLogger(getClass().getName());
+
+    public PaymentServiceImpl(PaymentRepository paymentRepository, PaymentEventPublisher paymentEventPublisher, PaymentGenerateCodePublisher paymentGenerateCodePublisher ,AccountService accountService, KnownPixService knownPixService, PixService pixService){
+        this.paymentRepository = paymentRepository;
+        this.paymentEventPublisher = paymentEventPublisher;
+        this.paymentGenerateCodePublisher = paymentGenerateCodePublisher;
+        this.accountService = accountService;
+        this.knownPixService = knownPixService;
+        this.pixService = pixService;
+    }
 
     @Override
     public PaymentModel findById(Long idPayment) {
-        PaymentModel paymentModel = paymentRepository.findById(idPayment)
+        return paymentRepository.findById(idPayment)
                 .orElseThrow(PaymentNotFoundException::new);
-        return paymentModel;
     }
 
     @Override
@@ -102,7 +107,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         long sevenDaysAgoEpoch = java.time.Instant.now().minus(java.time.Duration.ofDays(7)).getEpochSecond();
 
-        System.out.println(sevenDaysAgoEpoch);
+        logger.info("Seven days ago epoch: " + sevenDaysAgoEpoch);
         
         if (accountReceiveModel.getCreatedAt() >= sevenDaysAgoEpoch) {
             paymentGenerateCodePublisher.publishEventNewCodeConfirmation(paymentAnalyzeDto.email());
@@ -120,7 +125,6 @@ public class PaymentServiceImpl implements PaymentService {
             return "Você nunca fez um pix para essa chave, deseja continuar?";
         }
         
-        // paymentGenerateCodePublisher.publishEventNewCodeConfirmation(paymentAnalyzeDto.email());
         return "Você realmente deseja fazer esse pagamento?";
     }
     
@@ -141,8 +145,8 @@ public class PaymentServiceImpl implements PaymentService {
         accountSenderModel.setBalance(accountSenderModel.getBalance().subtract(paymentModel.getAmountPaid()));
         accountReceiveModel.setBalance(accountReceiveModel.getBalance().add(paymentModel.getAmountPaid()));
 
-        System.out.println("Sender: " + accountSenderModel.getIdAccount());
-        System.out.println("Receiver: " + accountReceiveModel.getIdAccount());
+        logger.info("Sender: " + accountSenderModel.getIdAccount());
+        logger.info("Receiver: " + accountReceiveModel.getIdAccount());
 
         savePayment(paymentModel);
         accountService.updateBalanceSender(accountSenderModel);
@@ -173,8 +177,8 @@ public class PaymentServiceImpl implements PaymentService {
 
         accountReceiveModel.setBalance(accountReceiveModel.getBalance().add(paymentModel.getAmountPaid()));
 
-        System.out.println("Sender: " + accountSenderModel.getIdAccount());
-        System.out.println("Receiver: " + accountReceiveModel.getIdAccount());
+        logger.info("Sender: " + accountSenderModel.getIdAccount());
+        logger.info("Receiver: " + accountReceiveModel.getIdAccount());
 
         savePayment(paymentModel);
         accountService.updateBalanceSender(accountSenderModel);

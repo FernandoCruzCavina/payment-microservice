@@ -2,7 +2,6 @@ package com.bank.payment.services.impl;
 
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.bank.payment.enums.ActionType;
@@ -15,16 +14,17 @@ import com.bank.payment.services.AccountService;
 import jakarta.transaction.Transactional;
 
 @Service
-public class AccountServiceImp implements AccountService {
+public class AccountServiceImpl implements AccountService {
 
-    @Autowired
-    PaymentReceiverEventPublisher paymentReceiverEventPublisher;
+    private final PaymentReceiverEventPublisher paymentReceiverEventPublisher;
+    private final PaymentSenderEventPublisher paymentSenderEventPublisher;
+    private final AccountRepository accountRepository;
 
-    @Autowired
-    PaymentSenderEventPublisher paymentSenderEventPublisher;
-
-    @Autowired
-    AccountRepository accountRepository;
+    public AccountServiceImpl(PaymentReceiverEventPublisher paymentReceiverEventPublisher, PaymentSenderEventPublisher paymentSenderEventPublisher, AccountRepository accountRepository) {
+        this.paymentReceiverEventPublisher = paymentReceiverEventPublisher;
+        this.paymentSenderEventPublisher = paymentSenderEventPublisher;
+        this.accountRepository = accountRepository;
+    }
 
     @Override
     public AccountModel save(AccountModel accountModel) {
@@ -49,7 +49,6 @@ public class AccountServiceImp implements AccountService {
     @Transactional
     @Override
     public AccountModel updateBalanceSender(AccountModel accountModel) {
-
         System.out.println("Enviando evento para: " + accountModel.getIdAccount());
 
         paymentSenderEventPublisher.publishPaymentSenderEvent(accountModel.toAccountEventDto(),
@@ -60,12 +59,10 @@ public class AccountServiceImp implements AccountService {
     @Transactional
     @Override
     public AccountModel updateBalanceReceive(AccountModel accountModel) {
-
         System.out.println("Enviando evento para: " + accountModel.getIdAccount());
 
         paymentReceiverEventPublisher.publishPaymentReceiverEvent(accountModel.toAccountEventDto(),
                 ActionType.PAYMENT);
         return accountModel;
     }
-
 }

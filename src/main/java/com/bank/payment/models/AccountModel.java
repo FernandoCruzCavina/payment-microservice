@@ -56,11 +56,11 @@ public class AccountModel implements Serializable {
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @OneToMany(mappedBy = "senderAccount", fetch = FetchType.LAZY)
-    Set<PaymentModel> sendPayment;
+    private Set<PaymentModel> sendPayment;
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @OneToMany(mappedBy = "receiverAccount", fetch = FetchType.LAZY)
-    Set<PaymentModel> receivePayment;
+    private Set<PaymentModel> receivePayment;
 
     public AccountEventDto toAccountEventDto() {
         var accountEventDto = new AccountEventDto();

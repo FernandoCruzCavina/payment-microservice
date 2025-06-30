@@ -5,7 +5,6 @@ import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,8 +23,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
  */
 @Configuration
 public class RabbitmqConfig {
-    @Autowired
-    CachingConnectionFactory cachingConnectionFactory;
 
     @Value(value = "${broker.exchange.accountEventExchange}")
     private String exchangeAccountEvent;
@@ -40,14 +37,14 @@ public class RabbitmqConfig {
     private String exchangePayment;
 
     @Value("${broker.queue.requestNewCode}")
-    public String requestNewCodeQueue;
+    public String exchangeNewCodeQueue;
 
     @Value("${broker.queue.sendPayment}")
-    public String sendPaymentQueue;
+    public String exchangeSendPaymentQueue;
 
     @Bean
     public RabbitTemplate rabbitTemplate() {
-        RabbitTemplate template = new RabbitTemplate(cachingConnectionFactory);
+        RabbitTemplate template = new RabbitTemplate(new CachingConnectionFactory());
         template.setMessageConverter(messageConverter());
         return template;
     }
@@ -82,11 +79,11 @@ public class RabbitmqConfig {
 
     @Bean
     public Queue requestNewCodeQueue() {
-        return new Queue(requestNewCodeQueue, true);
+        return new Queue(exchangeNewCodeQueue, true);
     }
 
     @Bean
     public Queue sendPaymentQueue() {
-        return new Queue(sendPaymentQueue, true);
+        return new Queue(exchangeSendPaymentQueue, true);
     }
 }

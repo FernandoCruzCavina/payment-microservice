@@ -1,7 +1,5 @@
 package com.bank.payment.services;
 
-import javax.security.auth.login.AccountNotFoundException;
-
 import com.bank.payment.dtos.ConclusionPaymentDto;
 import com.bank.payment.dtos.PaymentAnalyzeDto;
 import com.bank.payment.dtos.PaymentDto;

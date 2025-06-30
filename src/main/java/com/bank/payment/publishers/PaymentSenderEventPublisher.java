@@ -17,8 +17,12 @@ import com.bank.payment.enums.ActionType;
  */
 @Component
 public class PaymentSenderEventPublisher {
-    @Autowired
-    RabbitTemplate rabbitTemplate;
+    
+    private final RabbitTemplate rabbitTemplate;
+
+    public PaymentSenderEventPublisher(RabbitTemplate rabbitTemplate) {
+        this.rabbitTemplate = rabbitTemplate;
+    }
 
     @Value(value = "${broker.exchange.paymentSenderExchange}")
     private String exchangeAccountEvent;

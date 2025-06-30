@@ -1,8 +1,5 @@
 package com.bank.payment.controllers;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -17,10 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.bank.payment.dtos.PaymentAnalyzeDto;
 import com.bank.payment.dtos.PaymentDto;
 import com.bank.payment.models.PaymentModel;
-import com.bank.payment.services.AccountService;
-import com.bank.payment.services.KnownPixService;
 import com.bank.payment.services.PaymentService;
-import com.bank.payment.services.PixService;
 
 /**
  * REST controller for handling payment operations.
@@ -43,17 +37,11 @@ import com.bank.payment.services.PixService;
 @RequestMapping()
 public class PaymentController {
 
-    @Autowired
-    PaymentService paymentService;
+    private final PaymentService paymentService;
 
-    @Autowired
-    AccountService accountService;
-
-    @Autowired
-    KnownPixService knownPixService;
-
-    @Autowired
-    PixService pixService;
+    public PaymentController(PaymentService paymentService){
+        this.paymentService = paymentService;
+    }
 
     /**
      * Retrieves a payment by its ID.

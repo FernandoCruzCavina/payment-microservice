@@ -31,8 +31,12 @@ import com.bank.payment.services.PixService;
  */
 @Component
 public class PixConsumer {
-    @Autowired
-    PixService pixService;
+    
+    private final PixService pixService;
+
+    public PixConsumer(PixService pixService){
+        this.pixService = pixService;
+    }
 
     /**
      * Listens for Pix events and saves them according to the action type.
@@ -43,12 +47,8 @@ public class PixConsumer {
     public void listenPixEvent(@Payload PixEventDto pixEventDto) {
         var pixModel = pixEventDto.toPixModel();
 
-        switch (ActionType.valueOf(pixEventDto.getActionType())) {
-            case CREATE:
-                pixService.save(pixModel);
-                break;
-            default:
-                break;
+        if(pixEventDto.getActionType() == ActionType.CREATE.toString() || pixEventDto.getActionType() == ActionType.UPDATE.toString()) {
+            pixService.save(pixModel);
         }
     }
 }

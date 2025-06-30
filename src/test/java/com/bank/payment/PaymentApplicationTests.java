@@ -6,6 +6,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest
 class PaymentApplicationTests {
 
+	// Dependencies Test
 	@Test
 	void contextLoads() {
 	}

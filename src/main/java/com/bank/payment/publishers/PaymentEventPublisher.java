@@ -16,8 +16,12 @@ import com.bank.payment.dtos.PaymentEventDto;
  */
 @Component
 public class PaymentEventPublisher {
-    @Autowired
-    RabbitTemplate rabbitTemplate;
+    
+    private final RabbitTemplate rabbitTemplate;
+
+    public PaymentEventPublisher(RabbitTemplate rabbitTemplate) {
+        this.rabbitTemplate = rabbitTemplate;
+    }
 
     @Value(value = "${broker.exchange.paymentEventExchange}")
     private String exchangePaymentEvent;
