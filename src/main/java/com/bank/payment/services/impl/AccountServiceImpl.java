@@ -2,6 +2,8 @@ package com.bank.payment.services.impl;
 
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.bank.payment.enums.ActionType;
@@ -19,7 +21,8 @@ public class AccountServiceImpl implements AccountService {
     private final PaymentReceiverEventPublisher paymentReceiverEventPublisher;
     private final PaymentSenderEventPublisher paymentSenderEventPublisher;
     private final AccountRepository accountRepository;
-
+    private static final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
+    
     public AccountServiceImpl(PaymentReceiverEventPublisher paymentReceiverEventPublisher, PaymentSenderEventPublisher paymentSenderEventPublisher, AccountRepository accountRepository) {
         this.paymentReceiverEventPublisher = paymentReceiverEventPublisher;
         this.paymentSenderEventPublisher = paymentSenderEventPublisher;
@@ -49,7 +52,7 @@ public class AccountServiceImpl implements AccountService {
     @Transactional
     @Override
     public AccountModel updateBalanceSender(AccountModel accountModel) {
-        System.out.println("Enviando evento para: " + accountModel.getIdAccount());
+        logger.info("Enviando evento para: {}", accountModel.getIdAccount());
 
         paymentSenderEventPublisher.publishPaymentSenderEvent(accountModel.toAccountEventDto(),
                 ActionType.PAYMENT);
@@ -59,7 +62,7 @@ public class AccountServiceImpl implements AccountService {
     @Transactional
     @Override
     public AccountModel updateBalanceReceive(AccountModel accountModel) {
-        System.out.println("Enviando evento para: " + accountModel.getIdAccount());
+        logger.info("Enviando evento para: {}", accountModel.getIdAccount());
 
         paymentReceiverEventPublisher.publishPaymentReceiverEvent(accountModel.toAccountEventDto(),
                 ActionType.PAYMENT);

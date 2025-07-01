@@ -2,7 +2,6 @@ package com.bank.payment.services.impl;
 
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.bank.payment.models.KnownPixModel;
@@ -12,7 +11,6 @@ import com.bank.payment.services.KnownPixService;
 @Service
 public class KnownPixServiceImp implements KnownPixService {
 
-    
     private final KnownPixRepository knownPixRepository;
 
     public KnownPixServiceImp(KnownPixRepository knownPixRepository) {

@@ -2,10 +2,10 @@ package com.bank.payment.services.impl;
 
 import java.util.Date;
 import java.util.Optional;
-import java.util.logging.Logger;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.bank.payment.dtos.ConclusionPaymentDto;
@@ -37,18 +37,12 @@ import jakarta.transaction.Transactional;
 public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
-
     private final PaymentEventPublisher paymentEventPublisher;
-
     private final PaymentGenerateCodePublisher paymentGenerateCodePublisher;
-
     private final AccountService accountService;
-
     private final KnownPixService knownPixService;
-
     private final PixService pixService;
-    
-    Logger logger = Logger.getLogger(getClass().getName());
+    private static final Logger logger = LoggerFactory.getLogger(PaymentServiceImpl.class);
 
     public PaymentServiceImpl(PaymentRepository paymentRepository, PaymentEventPublisher paymentEventPublisher, PaymentGenerateCodePublisher paymentGenerateCodePublisher ,AccountService accountService, KnownPixService knownPixService, PixService pixService){
         this.paymentRepository = paymentRepository;
@@ -107,7 +101,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         long sevenDaysAgoEpoch = java.time.Instant.now().minus(java.time.Duration.ofDays(7)).getEpochSecond();
 
-        logger.info("Seven days ago epoch: " + sevenDaysAgoEpoch);
+        logger.info("Seven days ago epoch: {}", sevenDaysAgoEpoch);
         
         if (accountReceiveModel.getCreatedAt() >= sevenDaysAgoEpoch) {
             paymentGenerateCodePublisher.publishEventNewCodeConfirmation(paymentAnalyzeDto.email());
@@ -145,8 +139,8 @@ public class PaymentServiceImpl implements PaymentService {
         accountSenderModel.setBalance(accountSenderModel.getBalance().subtract(paymentModel.getAmountPaid()));
         accountReceiveModel.setBalance(accountReceiveModel.getBalance().add(paymentModel.getAmountPaid()));
 
-        logger.info("Sender: " + accountSenderModel.getIdAccount());
-        logger.info("Receiver: " + accountReceiveModel.getIdAccount());
+        logger.info("Sender: {}", accountSenderModel.getIdAccount());
+        logger.info("Receiver: {}", accountReceiveModel.getIdAccount());
 
         savePayment(paymentModel);
         accountService.updateBalanceSender(accountSenderModel);
@@ -177,8 +171,8 @@ public class PaymentServiceImpl implements PaymentService {
 
         accountReceiveModel.setBalance(accountReceiveModel.getBalance().add(paymentModel.getAmountPaid()));
 
-        logger.info("Sender: " + accountSenderModel.getIdAccount());
-        logger.info("Receiver: " + accountReceiveModel.getIdAccount());
+        logger.info("Sender: {}", accountSenderModel.getIdAccount());
+        logger.info("Receiver: {}", accountReceiveModel.getIdAccount());
 
         savePayment(paymentModel);
         accountService.updateBalanceSender(accountSenderModel);

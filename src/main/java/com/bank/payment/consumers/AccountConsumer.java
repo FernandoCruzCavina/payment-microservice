@@ -1,11 +1,13 @@
 package com.bank.payment.consumers;
 
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.ExchangeTypes;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
@@ -33,6 +35,7 @@ import com.bank.payment.services.AccountService;
 public class AccountConsumer {
 
     private final AccountService accountService;
+    private static final Logger logger = LoggerFactory.getLogger(AccountConsumer.class);
     
     public AccountConsumer(AccountService accountService){
         this.accountService = accountService;
@@ -57,6 +60,6 @@ public class AccountConsumer {
             default:
                 break;
         }
-        System.out.println(accountModel);
+        logger.info(accountModel.toString());
     }
 }
