@@ -1,7 +1,6 @@
 package com.bank.payment.services;
 
-import java.util.Optional;
-
+import com.bank.payment.exceptions.PixNotFoundException;
 import com.bank.payment.models.PixModel;
 import com.bank.payment.repository.PixRepository;
 
@@ -28,8 +27,9 @@ public interface PixService {
      * Finds a PixModel by its key.
      * 
      * @param key the Pix key to search for
-     * @return an Optional containing the PixModel if found, or empty if not found
+     * @return an PixModel if found, or throw an error if not found
+     * @throws PixNotFoundException if no PixModel with the given pixKey exists
      */
-    Optional<PixModel> findByKey(String key);
+    PixModel findByKeyOrThrow(String key);
 
 }

@@ -2,7 +2,9 @@ package com.bank.payment.services;
 
 import java.util.Optional;
 
+import com.bank.payment.models.AccountModel;
 import com.bank.payment.models.KnownPixModel;
+import com.bank.payment.models.PixModel;
 
 /**
  * Interface for KnownPixService that defines methods for handling known Pix operations.
@@ -25,10 +27,15 @@ public interface KnownPixService {
     Optional<KnownPixModel> existsByIdAccountAndPixKey(Long idAccount, String pixKey);
 
     /**
-     * Saves a KnownPixModel to the database.
+     * Saves the first transactions between SenderAccount and ReceiverAccount.
      * 
-     * @param knownPixModel the KnownPixModel to be saved
+     * @param senderAccount
+     * @param receiverPixModel
      * @return the saved KnownPixModel
      */
-    KnownPixModel save(KnownPixModel knownPixModel);
+    KnownPixModel saveKnownPixModel(AccountModel senderAccount, PixModel receiverPixModel);
+
+    boolean isTheFirstTransaction(AccountModel senderAccountModel, PixModel receiverPixModel);
+
+    boolean wasReceiverAccountCreatedLessThan7DaysAgo(AccountModel receiverAccountModel);
 }

@@ -18,7 +18,7 @@ import com.bank.payment.repository.PaymentRepository;
  */
 public interface PaymentService {
 
-    PaymentModel findById(Long idPayment);
+    PaymentModel findByIdOrThrow(Long idPayment);
 
     String delete(Long idPayment);
 

@@ -1,6 +1,7 @@
 package com.bank.payment.services;
 
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import com.bank.payment.models.AccountModel;
 
@@ -29,7 +30,7 @@ public interface AccountService {
      * @param idAccount the ID of the account to search for
      * @return an Optional containing the AccountModel if found, or empty if not found
      */
-    Optional<AccountModel> findById(Long idAccount);
+    AccountModel findByIdOrThrow(Long accountId, Supplier<? extends RuntimeException> exceptionSupplier);
 
     /**
      * Finds an AccountModel by its Pix key.
@@ -37,14 +38,14 @@ public interface AccountService {
      * @param pixKey the Pix key to search for
      * @return an Optional containing the AccountModel if found, or empty if not found
      */
-    Optional<AccountModel> findByPixKey(String pixKey);
+    AccountModel findByPixKeyOrThrow(String pixKey, Supplier<? extends RuntimeException> exceptionSupplier);
 
     /**
      * Deletes an AccountModel by its ID.
      * 
-     * @param idAccount the ID of the account to be deleted
+     * @param accountId the ID of the account to be deleted
      */
-    void delete(Long idAccount);
+    void delete(Long accountId);
 
     /**
      * Updates the balance of the account receiving a payment.

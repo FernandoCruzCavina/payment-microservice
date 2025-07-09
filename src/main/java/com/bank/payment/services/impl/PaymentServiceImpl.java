@@ -1,7 +1,9 @@
 package com.bank.payment.services.impl;
 
+import static com.bank.payment.utils.PaymentValidations.validateNotTransferringToSelf;
+import static com.bank.payment.utils.PaymentValidations.validateSufficientBalance;
+
 import java.util.Date;
-import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,11 +18,7 @@ import com.bank.payment.exceptions.AccountReceiverNotFoundException;
 import com.bank.payment.exceptions.AccountSenderNotFoundException;
 import com.bank.payment.exceptions.FirstTransferPixException;
 import com.bank.payment.exceptions.PaymentNotFoundException;
-import com.bank.payment.exceptions.PixNotFoundException;
-import com.bank.payment.exceptions.TransferBalanceToYourselfException;
-import com.bank.payment.exceptions.TransferInsuficientBalanceException;
 import com.bank.payment.models.AccountModel;
-import com.bank.payment.models.KnownPixModel;
 import com.bank.payment.models.PaymentModel;
 import com.bank.payment.models.PixModel;
 import com.bank.payment.publishers.PaymentEventPublisher;
@@ -44,6 +42,11 @@ public class PaymentServiceImpl implements PaymentService {
     private final PixService pixService;
     private static final Logger logger = LoggerFactory.getLogger(PaymentServiceImpl.class);
 
+    private static final String MESSAGE_NEW_ACCOUNT = "A conta que receberá o dinheiro foi criada a menos de 7 dias atrás. Deseja continuar?";
+    private static final String MESSAGE_FIRST_TIME_PIX = "Você nunca fez um pix para essa chave, deseja continuar?";
+    private static final String MESSAGE_DEFAULT_CONFIRMATION = "Você realmente deseja fazer esse pagamento?";
+
+
     public PaymentServiceImpl(PaymentRepository paymentRepository, PaymentEventPublisher paymentEventPublisher, PaymentGenerateCodePublisher paymentGenerateCodePublisher ,AccountService accountService, KnownPixService knownPixService, PixService pixService){
         this.paymentRepository = paymentRepository;
         this.paymentEventPublisher = paymentEventPublisher;
@@ -54,7 +57,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public PaymentModel findById(Long idPayment) {
+    public PaymentModel findByIdOrThrow(Long idPayment) {
         return paymentRepository.findById(idPayment)
                 .orElseThrow(PaymentNotFoundException::new);
     }
@@ -80,82 +83,57 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public String reviewPaymentBeforeProcessing(Long idAccount, String pixKey, PaymentAnalyzeDto paymentAnalyzeDto){
-        AccountModel accountSenderModel = accountService.findById(idAccount)
-                .orElseThrow(AccountSenderNotFoundException::new);
-        AccountModel accountReceiveModel = accountService.findByPixKey(pixKey)
-                .orElseThrow(AccountReceiverNotFoundException::new);
-        PixModel pixModel = pixService.findByKey(pixKey)
-                .orElseThrow(PixNotFoundException::new);
+    public String reviewPaymentBeforeProcessing(Long senderAccountId, String pixKey, PaymentAnalyzeDto paymentAnalyzeDto){
+        AccountModel senderAccountModel = accountService.findByIdOrThrow(senderAccountId, AccountSenderNotFoundException::new);
+        AccountModel receiverAccountModel = accountService.findByPixKeyOrThrow(pixKey, AccountReceiverNotFoundException::new);
+        PixModel receiverPixModel = pixService.findByKeyOrThrow(pixKey);
 
-        if(accountSenderModel.getIdAccount()==accountReceiveModel.getIdAccount()) {
-            throw new TransferBalanceToYourselfException();
-        }
-
-        if (accountSenderModel.getBalance().compareTo(paymentAnalyzeDto.amountPaid()) <= 0) {
-            throw new TransferInsuficientBalanceException();
-        }
-
-        Optional<KnownPixModel> knownPixModelExists = knownPixService.existsByIdAccountAndPixKey(idAccount,
-                pixModel.getKey());
-
-        long sevenDaysAgoEpoch = java.time.Instant.now().minus(java.time.Duration.ofDays(7)).getEpochSecond();
-
-        logger.info("Seven days ago epoch: {}", sevenDaysAgoEpoch);
+        validateNotTransferringToSelf(senderAccountModel, receiverAccountModel);
+        validateSufficientBalance(senderAccountModel, paymentAnalyzeDto.amountPaid());
         
-        if (accountReceiveModel.getCreatedAt() >= sevenDaysAgoEpoch) {
+        if (knownPixService.wasReceiverAccountCreatedLessThan7DaysAgo(receiverAccountModel)) {
             paymentGenerateCodePublisher.publishEventNewCodeConfirmation(paymentAnalyzeDto.email());
-            return "A conta que receberá o dinheiro foi criada a menos de 7 dias atrás. Deseja continuar?";
+            return MESSAGE_NEW_ACCOUNT;
         }
 
-        if (!knownPixModelExists.isPresent()) {
-            var knownPixModel = new KnownPixModel();
-
-            knownPixModel.setIdAccount(accountSenderModel.getIdAccount());
-            knownPixModel.setPixKey(pixModel.getKey());
-            knownPixService.save(knownPixModel);
-
+        if (knownPixService.isTheFirstTransaction(senderAccountModel, receiverPixModel)) {
+            knownPixService.saveKnownPixModel(senderAccountModel, receiverPixModel);
             paymentGenerateCodePublisher.publishEventNewCodeConfirmation(paymentAnalyzeDto.email());
-            return "Você nunca fez um pix para essa chave, deseja continuar?";
+            return MESSAGE_FIRST_TIME_PIX;
         }
         
-        return "Você realmente deseja fazer esse pagamento?";
+        return MESSAGE_DEFAULT_CONFIRMATION;
     }
     
     public void sendPix(ConclusionPaymentDto paymentDto){
         var paymentModel = new PaymentModel();
-        AccountModel accountSenderModel = accountService.findById(paymentDto.idAccount())
-                .orElseThrow(AccountSenderNotFoundException::new);
-        AccountModel accountReceiveModel = accountService.findByPixKey(paymentDto.pixKey())
-                .orElseThrow(AccountReceiverNotFoundException::new);
+        AccountModel senderAccountModel = accountService.findByIdOrThrow(paymentDto.idAccount(), AccountSenderNotFoundException::new);
+        AccountModel receiverAccountModel = accountService.findByPixKeyOrThrow(paymentDto.pixKey(), AccountReceiverNotFoundException::new);
 
         BeanUtils.copyProperties(paymentDto, paymentModel);
         paymentModel.setPaymentRequestDate(new Date().getTime());
         paymentModel.setPaymentCompletionDate(new Date().getTime());
-        paymentModel.setReceiverAccount(accountReceiveModel);
-        paymentModel.setSenderAccount(accountSenderModel);
+        paymentModel.setReceiverAccount(receiverAccountModel);
+        paymentModel.setSenderAccount(senderAccountModel);
         paymentModel.setPaymentType(PaymentType.PIX);
 
-        accountSenderModel.setBalance(accountSenderModel.getBalance().subtract(paymentModel.getAmountPaid()));
-        accountReceiveModel.setBalance(accountReceiveModel.getBalance().add(paymentModel.getAmountPaid()));
+        senderAccountModel.setBalance(senderAccountModel.getBalance().subtract(paymentModel.getAmountPaid()));
+        receiverAccountModel.setBalance(receiverAccountModel.getBalance().add(paymentModel.getAmountPaid()));
 
-        logger.info("Sender: {}", accountSenderModel.getIdAccount());
-        logger.info("Receiver: {}", accountReceiveModel.getIdAccount());
+        logger.info("Sender: {}", senderAccountModel.getIdAccount());
+        logger.info("Receiver: {}", receiverAccountModel.getIdAccount());
 
         savePayment(paymentModel);
-        accountService.updateBalanceSender(accountSenderModel);
-        accountService.updateBalanceReceive(accountReceiveModel);
+        accountService.updateBalanceSender(senderAccountModel);
+        accountService.updateBalanceReceive(receiverAccountModel);
     }
 
     public String directPayment(Long idAccount, String pixKey, PaymentDto paymentDto){
         var paymentModel = new PaymentModel();
 
-        AccountModel accountSenderModel = accountService.findById(idAccount)
-                .orElseThrow(AccountSenderNotFoundException::new);
-        AccountModel accountReceiveModel = accountService.findByPixKey(pixKey)
-                .orElseThrow(AccountReceiverNotFoundException::new);
-        PixModel pixModel = pixService.findByKey(pixKey)
-                .orElseThrow(PixNotFoundException::new);
+        AccountModel senderAccountModel = accountService.findByIdOrThrow(idAccount, AccountSenderNotFoundException::new);
+        AccountModel receiverAccountModel = accountService.findByPixKeyOrThrow(pixKey, AccountReceiverNotFoundException::new);
+        PixModel pixModel = pixService.findByKeyOrThrow(pixKey);
 
         knownPixService.existsByIdAccountAndPixKey(idAccount, pixModel.getKey())
                 .orElseThrow(FirstTransferPixException::new);
@@ -163,20 +141,19 @@ public class PaymentServiceImpl implements PaymentService {
         BeanUtils.copyProperties(paymentDto, paymentModel);
         paymentModel.setPaymentRequestDate(new Date().getTime());
         paymentModel.setPaymentCompletionDate(new Date().getTime());
-        paymentModel.setReceiverAccount(accountReceiveModel);
-        paymentModel.setSenderAccount(accountSenderModel);
+        paymentModel.setReceiverAccount(receiverAccountModel);
+        paymentModel.setSenderAccount(senderAccountModel);
         paymentModel.setPaymentType(PaymentType.PIX);
 
-        accountSenderModel.setBalance(accountSenderModel.getBalance().subtract(paymentModel.getAmountPaid()));
+        senderAccountModel.setBalance(senderAccountModel.getBalance().subtract(paymentModel.getAmountPaid()));
+        receiverAccountModel.setBalance(receiverAccountModel.getBalance().add(paymentModel.getAmountPaid()));
 
-        accountReceiveModel.setBalance(accountReceiveModel.getBalance().add(paymentModel.getAmountPaid()));
-
-        logger.info("Sender: {}", accountSenderModel.getIdAccount());
-        logger.info("Receiver: {}", accountReceiveModel.getIdAccount());
+        logger.info("Sender: {}", senderAccountModel.getIdAccount());
+        logger.info("Receiver: {}", receiverAccountModel.getIdAccount());
 
         savePayment(paymentModel);
-        accountService.updateBalanceSender(accountSenderModel);
-        accountService.updateBalanceReceive(accountReceiveModel);
+        accountService.updateBalanceSender(senderAccountModel);
+        accountService.updateBalanceReceive(receiverAccountModel);
 
         return "O pagamento foi realizado com sucesso!";
     }

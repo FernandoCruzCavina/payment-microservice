@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import com.bank.payment.exceptions.PixNotFoundException;
 import com.bank.payment.models.PixModel;
 import com.bank.payment.repository.PixRepository;
 import com.bank.payment.services.PixService;
@@ -23,8 +24,9 @@ public class PixServiceImpl implements PixService {
     }
 
     @Override
-    public Optional<PixModel> findByKey(String key) {
-        return pixRepository.findByKey(key);
+    public PixModel findByKeyOrThrow(String key) {
+        return pixRepository.findByKey(key)
+            .orElseThrow(PixNotFoundException::new);
     }
 
 }

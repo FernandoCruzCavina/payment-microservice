@@ -51,7 +51,7 @@ public class PaymentController {
      */
     @GetMapping("/{idPayment}")
     public ResponseEntity<Object> getOnePayment(@PathVariable(value = "idPayment") Long idPayment) {
-        PaymentModel paymentModel = paymentService.findById(idPayment);
+        PaymentModel paymentModel = paymentService.findByIdOrThrow(idPayment);
         return ResponseEntity.status(HttpStatus.OK).body(paymentModel);
     }
 
