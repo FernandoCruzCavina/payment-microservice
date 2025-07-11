@@ -2,7 +2,10 @@ package com.bank.payment.services;
 
 import com.bank.payment.dtos.ConclusionPaymentDto;
 import com.bank.payment.dtos.PaymentAnalyzeDto;
-import com.bank.payment.dtos.PaymentDto;
+import com.bank.payment.exceptions.PaymentNotFoundException;
+import com.bank.payment.exceptions.ReceiverAccountNotFoundException;
+import com.bank.payment.exceptions.SenderAccountNotFoundException;
+import com.bank.payment.exceptions.TransferInsuficientBalanceException;
 import com.bank.payment.models.PaymentModel;
 import com.bank.payment.repository.PaymentRepository;
 
@@ -18,8 +21,22 @@ import com.bank.payment.repository.PaymentRepository;
  */
 public interface PaymentService {
 
-    PaymentModel findByIdOrThrow(Long idPayment);
+    /**
+     * Finds a payment by its ID.
+     * 
+     * @param idPayment the ID of the payment to find
+     * @return the PaymentModel associated with the given ID
+     * @throws PaymentNotFoundException if the payment with the given ID is not found
+     */
+    PaymentModel findById(Long idPayment);
 
+    /**
+     * Deletes a payment by its ID.
+     * 
+     * @param idPayment the ID of the payment to delete
+     * @return a String message indicating the result of the deletion operation
+     * @throws PaymentNotFoundException if the payment with the given ID is not found
+     */
     String delete(Long idPayment);
 
     /**
@@ -36,27 +53,21 @@ public interface PaymentService {
      * <p>
      * This method checks if the sender has sufficient balance, if the receiver account exists, and if the Pix key is valid.
      * 
-     * @param idAccount the ID of the account making the payment
-     * @param pixKey the Pix key of the receiver
      * @param paymentAnalyzeDto the DTO containing payment analysis details
      * @return a String message asking the user to confirm the payment or an error message if the analysis fails
+     * @throws ReceiverAccountNotFoundException if the receiver account is not found
+     * @throws SenderAccountNotFoundException if the sender account is not found
+     * @throws PixKeyNotFoundException if the Pix key of the receiver is not found
+     * @throws InsufficientBalanceException if the sender account does not have sufficient balance for the payment
+     * @throws TransferInsuficientBalanceException if the sender account does not have sufficient balance for the transfer
      */
-    String reviewPaymentBeforeProcessing(Long idAccount, String pixKey, PaymentAnalyzeDto paymentAnalyzeDto);
+    String reviewPaymentBeforeProcessing(PaymentAnalyzeDto paymentAnalyzeDto);
 
     /**
      * Sends a Pix transactions to the receiver's account after the payment has been analyzed and confirmed.
      * 
      * @param paymentDto the DTO containing, for example, the payment amount, sender and receiver details
-     */
-    void sendPix(ConclusionPaymentDto paymentDto);
-
-    /**
-     * Processes a direct payment by performing the necessary checks and sending the Pix transaction.
-     * 
-     * @param idAccount the ID of the account making the payment
-     * @param pixKey the Pix key of the receiver
-     * @param paymentDto the DTO containing payment details
      * @return a String message indicating the result of the direct payment operation
      */
-    String directPayment(Long idAccount, String pixKey, PaymentDto paymentDto);
+    String sendPix(ConclusionPaymentDto paymentDto);
 }

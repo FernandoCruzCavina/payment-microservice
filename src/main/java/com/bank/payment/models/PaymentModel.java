@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 
 import org.springframework.beans.BeanUtils;
 
+import com.bank.payment.dtos.ConclusionPaymentDto;
 import com.bank.payment.dtos.PaymentEventDto;
 import com.bank.payment.enums.PaymentType;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -79,4 +80,16 @@ public class PaymentModel implements Serializable {
         paymentEventDto.setPaymentDescription(this.paymentDescription);
         return paymentEventDto;
     }
+    
+    public static PaymentModel fromConclusionPaymentDto(ConclusionPaymentDto dto, AccountModel sender, AccountModel receiver) {
+        PaymentModel model = new PaymentModel();
+        model.setAmountPaid(dto.amountPaid());
+        model.setSenderAccount(sender);
+        model.setReceiverAccount(receiver);
+        model.setPaymentType(PaymentType.PIX);
+        model.setPaymentRequestDate(System.currentTimeMillis());
+        model.setPaymentCompletionDate(System.currentTimeMillis());
+        return model;
+    }
+
 }

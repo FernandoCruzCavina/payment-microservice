@@ -2,7 +2,6 @@ package com.bank.payment.controllers;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,8 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.bank.payment.dtos.ConclusionPaymentDto;
 import com.bank.payment.dtos.PaymentAnalyzeDto;
-import com.bank.payment.dtos.PaymentDto;
 import com.bank.payment.models.PaymentModel;
 import com.bank.payment.services.PaymentService;
 
@@ -51,7 +50,7 @@ public class PaymentController {
      */
     @GetMapping("/{idPayment}")
     public ResponseEntity<Object> getOnePayment(@PathVariable(value = "idPayment") Long idPayment) {
-        PaymentModel paymentModel = paymentService.findByIdOrThrow(idPayment);
+        PaymentModel paymentModel = paymentService.findById(idPayment);
         return ResponseEntity.status(HttpStatus.OK).body(paymentModel);
     }
 
@@ -75,25 +74,21 @@ public class PaymentController {
      * @param paymentDto the payment analysis data
      * @return a ResponseEntity containing a confirmation message
      */
-    @PostMapping("/{idAccount}/pix/{pixKey}")
-    public ResponseEntity<Object> analyzePayment(@PathVariable(value = "idAccount") Long idAccount,
-            @PathVariable(value = "pixKey") String pixKey, @RequestBody PaymentAnalyzeDto paymentDto) {
-        String response = paymentService.reviewPaymentBeforeProcessing(idAccount, pixKey, paymentDto);
+    @PostMapping("/pix/review")
+    public ResponseEntity<Object> analyzePayment(@RequestBody PaymentAnalyzeDto paymentDto) {
+        String response = paymentService.reviewPaymentBeforeProcessing(paymentDto);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     /**
      * Processes a direct payment from the sender to the receiver using Pix without any analysis.
      *
-     * @param idAccount the ID of the sender's account
-     * @param pixKey the Pix key of the receiver
-     * @param paymentDto the payment data
+     * @param paymentDto the dto contains accountId of sender, pixKey of receiver and value of transaction  
      * @return a ResponseEntity containing a confirmation message
      */
-    @PostMapping("/{idAccount}/pix/{pixKey}/direct")
-    public ResponseEntity<Object> directPayment(@PathVariable(value = "idAccount") Long idAccount,
-            @PathVariable(value = "pixKey") String pixKey, @RequestBody @Validated PaymentDto paymentDto) {
-        String response = paymentService.directPayment(idAccount, pixKey, paymentDto);
+    @PostMapping("/pix")
+    public ResponseEntity<Object> directPayment(@RequestBody ConclusionPaymentDto paymentDto) {
+        String response = paymentService.sendPix(paymentDto);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }

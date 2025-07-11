@@ -24,8 +24,14 @@ public final class PaymentValidations {
         }
     }
 
-    public static boolean isAccountYoungerThanSevenDays(AccountModel account) {
-        long sevenDaysAgoEpoch = Instant.now().minus(Duration.ofDays(7)).getEpochSecond();
-        return account.getCreatedAt() >= sevenDaysAgoEpoch;
+    public static boolean wasReceiverAccountCreatedLessThan7DaysAgo(AccountModel receiver) {
+        if (receiver.getCreatedAt() == null) {
+            throw new IllegalArgumentException("createdAt não pode ser nulo");
+        }
+
+        Instant createdAt = Instant.ofEpochMilli(receiver.getCreatedAt());
+        Instant sevenDaysAgo = Instant.now().minus(Duration.ofDays(7));
+
+        return createdAt.isAfter(sevenDaysAgo);
     }
 }

@@ -18,24 +18,21 @@ import com.bank.payment.models.PixModel;
  */
 public interface KnownPixService {
     /**
-     * Checks if a known Pix exists by account ID and Pix key.
-     * 
-     * @param idAccount the ID of the account associated with the Pix key
-     * @param pixKey the Pix key to check
-     * @return an Optional containing the KnownPixModel if it exists, or empty if not found
-     */
-    Optional<KnownPixModel> existsByIdAccountAndPixKey(Long idAccount, String pixKey);
-
-    /**
      * Saves the first transactions between SenderAccount and ReceiverAccount.
      * 
-     * @param senderAccount
-     * @param receiverPixModel
+     * @param senderAccount the account of the sender
+     * @param receiverPixModel the PixModel of the receiver
      * @return the saved KnownPixModel
      */
     KnownPixModel saveKnownPixModel(AccountModel senderAccount, PixModel receiverPixModel);
 
+    /**
+     * Checks if already exists a KnownPixModel, in other words, if it is the first transaction for the given sender account ID and receiver Pix key.
+     * 
+     * @param senderAccountId the ID of the sender's account
+     * @param receiverPixKey the Pix key of the receiver
+     * @return an true if the KnownPixModel exists, false otherwise
+     */
     boolean isTheFirstTransaction(AccountModel senderAccountModel, PixModel receiverPixModel);
 
-    boolean wasReceiverAccountCreatedLessThan7DaysAgo(AccountModel receiverAccountModel);
 }

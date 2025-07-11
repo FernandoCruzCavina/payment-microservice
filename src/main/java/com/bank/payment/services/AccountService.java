@@ -25,20 +25,21 @@ public interface AccountService {
     AccountModel save(AccountModel accountModel);
 
     /**
-     * Finds an AccountModel by its ID.
+     * Finds an AccountModel of the payment sender by its ID.
      * 
-     * @param idAccount the ID of the account to search for
-     * @return an Optional containing the AccountModel if found, or empty if not found
+     * @param accountId the ID of the account to search for
+     * @return the AccountModel if found
+     * @throws RuntimeException if the account is not found
      */
-    AccountModel findByIdOrThrow(Long accountId, Supplier<? extends RuntimeException> exceptionSupplier);
+    AccountModel findSenderAccountById(Long accountId);
 
     /**
-     * Finds an AccountModel by its Pix key.
+     * Finds an AccountModel of the payment receiver by its Pix key.
      * 
      * @param pixKey the Pix key to search for
      * @return an Optional containing the AccountModel if found, or empty if not found
      */
-    AccountModel findByPixKeyOrThrow(String pixKey, Supplier<? extends RuntimeException> exceptionSupplier);
+    AccountModel findReceiverAccountByPixKey(String pixKey);
 
     /**
      * Deletes an AccountModel by its ID.

@@ -8,9 +8,9 @@ package com.bank.payment.exceptions;
  * @version 1.0.0, 06/26/2025
  * @since 1.0.0
  */
-public class AccountReceiverNotFoundException extends RuntimeException {
+public class ReceiverAccountNotFoundException extends RuntimeException {
     
-    public AccountReceiverNotFoundException(){
+    public ReceiverAccountNotFoundException(){
         super("A conta que receberá não foi encontrada");
     }
 }

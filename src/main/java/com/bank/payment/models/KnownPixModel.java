@@ -41,4 +41,11 @@ public class KnownPixModel implements Serializable {
 
     @Column(nullable = false)
     private Long idAccount;
+
+    public static KnownPixModel of(AccountModel sender, PixModel receiverPix) {
+        var model = new KnownPixModel();
+        model.setIdAccount(sender.getIdAccount());
+        model.setPixKey(receiverPix.getKey());
+        return model;
+    }
 }

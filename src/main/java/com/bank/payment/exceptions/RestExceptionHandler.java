@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
  * <ul>
  *   <li>{@link PaymentNotFoundException} - returns 404 NOT FOUND</li>
  *   <li>{@link PixNotFoundException} - returns 404 NOT FOUND</li>
- *   <li>{@link AccountSenderNotFoundException} - returns 404 NOT FOUND</li>
- *   <li>{@link AccountReceiverNotFoundException} - returns 404 NOT FOUND</li>
+ *   <li>{@link SenderAccountNotFoundException} - returns 404 NOT FOUND</li>
+ *   <li>{@link ReceiverAccountNotFoundException} - returns 404 NOT FOUND</li>
  *   <li>{@link FirstTransferPixException} - returns 409 CONFLICT</li>
  *   <li>{@link TransferBalanceToYourselfException} - returns 400 BAD REQUEST</li>
  *   <li>{@link TransferInsuficientBalanceException} - returns 422 UNPROCESSABLE ENTITY</li>
@@ -61,8 +61,8 @@ public class RestExceptionHandler {
      * @param ex the thrown AccountSenderNotFoundException
      * @return a ResponseEntity containing a MessageHandler with NOT_FOUND status and error message
      */
-    @ExceptionHandler(AccountSenderNotFoundException.class)
-    public ResponseEntity<MessageHandler> handleAccountSenderNotFound(AccountSenderNotFoundException ex) {
+    @ExceptionHandler(SenderAccountNotFoundException.class)
+    public ResponseEntity<MessageHandler> handleAccountSenderNotFound(SenderAccountNotFoundException ex) {
         MessageHandler messageException = new MessageHandler(HttpStatus.NOT_FOUND, ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(messageException);
     }
@@ -73,22 +73,10 @@ public class RestExceptionHandler {
      * @param ex the thrown AccountReceiverNotFoundException
      * @return a ResponseEntity containing a MessageHandler with NOT_FOUND status and error message
      */
-    @ExceptionHandler(AccountReceiverNotFoundException.class)
-    public ResponseEntity<MessageHandler> handleAccountReceiverNotFound(AccountReceiverNotFoundException ex) {
+    @ExceptionHandler(ReceiverAccountNotFoundException.class)
+    public ResponseEntity<MessageHandler> handleAccountReceiverNotFound(ReceiverAccountNotFoundException ex) {
         MessageHandler messageException = new MessageHandler(HttpStatus.NOT_FOUND, ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(messageException);
-    }
-
-    /**
-     * Handles FirstTransferPixException and returns a 409 CONFLICT response.
-     *
-     * @param ex the thrown FirstTransferPixException
-     * @return a ResponseEntity containing a MessageHandler with CONFLICT status and error message
-     */
-    @ExceptionHandler(FirstTransferPixException.class)
-    public ResponseEntity<MessageHandler> handleFirstTransferPix(FirstTransferPixException ex) {
-        MessageHandler messageException = new MessageHandler(HttpStatus.CONFLICT, ex.getMessage());
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(messageException);
     }
 
     /**

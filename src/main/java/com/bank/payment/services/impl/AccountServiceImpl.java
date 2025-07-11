@@ -1,15 +1,12 @@
 package com.bank.payment.services.impl;
 
-import java.util.Optional;
-import java.util.function.Supplier;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.bank.payment.enums.ActionType;
-import com.bank.payment.exceptions.AccountReceiverNotFoundException;
-import com.bank.payment.exceptions.AccountSenderNotFoundException;
+import com.bank.payment.exceptions.ReceiverAccountNotFoundException;
+import com.bank.payment.exceptions.SenderAccountNotFoundException;
 import com.bank.payment.models.AccountModel;
 import com.bank.payment.publishers.PaymentReceiverEventPublisher;
 import com.bank.payment.publishers.PaymentSenderEventPublisher;
@@ -38,15 +35,15 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public AccountModel findByIdOrThrow(Long idAccount, Supplier<? extends RuntimeException> exceptionSupplier) {
-        return accountRepository.findById(idAccount)
-                .orElseThrow(exceptionSupplier);
+    public AccountModel findSenderAccountById(Long accountId) {
+        return accountRepository.findById(accountId)
+                .orElseThrow(SenderAccountNotFoundException::new);
     }
 
     @Override
-    public AccountModel findByPixKeyOrThrow(String pixKey, Supplier<? extends RuntimeException> exceptionSupplier) {
+    public AccountModel findReceiverAccountByPixKey(String pixKey) {
         return accountRepository.findByPixKey(pixKey)
-                .orElseThrow(exceptionSupplier);
+                .orElseThrow(ReceiverAccountNotFoundException::new);
     }
 
     @Override

@@ -30,6 +30,6 @@ public interface PixService {
      * @return an PixModel if found, or throw an error if not found
      * @throws PixNotFoundException if no PixModel with the given pixKey exists
      */
-    PixModel findByKeyOrThrow(String key);
+    PixModel findByKey(String key);
 
 }

@@ -1,11 +1,10 @@
 package com.bank.payment.services.impl;
 
+import com.bank.payment.dtos.ConclusionPaymentDto;
 import com.bank.payment.dtos.PaymentAnalyzeDto;
-import com.bank.payment.dtos.PaymentDto;
 import com.bank.payment.enums.PaymentType;
 import com.bank.payment.exceptions.*;
 import com.bank.payment.models.AccountModel;
-import com.bank.payment.models.KnownPixModel;
 import com.bank.payment.models.PaymentModel;
 import com.bank.payment.models.PixModel;
 import com.bank.payment.publishers.PaymentEventPublisher;
@@ -26,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -60,7 +60,7 @@ class PaymentServiceImplTest {
 
     // --- Exception test for findById ---
     @Test
-    void findById_shouldThrowPaymentNotFoundException() {
+    void findByIdOrThrow_shouldThrowPaymentNotFoundException() {
         when(paymentRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(PaymentNotFoundException.class, () -> paymentService.findById(1L));
@@ -83,51 +83,49 @@ class PaymentServiceImplTest {
     // --- Success test for reviewPaymentBeforeProcessing ---
     @Test
     void reviewPaymentBeforeProcessing_shouldReturnConfirmationMessage() {
-        Long idAccount = 1L;
-        String pixKey = "pixkey";
-        PaymentAnalyzeDto dto = new PaymentAnalyzeDto("email@test.com", BigDecimal.TEN, "Pagamento de teste");
+        PaymentAnalyzeDto dto = new PaymentAnalyzeDto(1L, "pixkey", "email@test.com", BigDecimal.TEN, "Pagamento de teste");
 
         AccountModel sender = new AccountModel();
-        sender.setIdAccount(idAccount);
+        sender.setIdAccount(1L);
         sender.setBalance(BigDecimal.valueOf(100));
         AccountModel receiver = new AccountModel();
         receiver.setIdAccount(2L);
         receiver.setCreatedAt(java.time.Instant.now().minus(java.time.Duration.ofDays(10)).getEpochSecond());
 
         PixModel pixModel = new PixModel();
-        pixModel.setKey(pixKey);
+        pixModel.setKey("pixkey");
 
-        when(accountService.findById(idAccount)).thenReturn(Optional.of(sender));
-        when(accountService.findByPixKey(pixKey)).thenReturn(Optional.of(receiver));
-        when(pixService.findByKey(pixKey)).thenReturn(Optional.of(pixModel));
-        when(knownPixService.existsByIdAccountAndPixKey(idAccount, pixKey)).thenReturn(Optional.of(new KnownPixModel()));
+        when(accountService.findSenderAccountById(eq(1L))).thenReturn(sender);
+        when(accountService.findReceiverAccountByPixKey(eq("pixkey"))).thenReturn(receiver);
+        when(pixService.findByKey(eq("pixkey"))).thenReturn(pixModel);
+        when(knownPixService.isTheFirstTransaction(any(AccountModel.class), any(PixModel.class))).thenReturn(false);
 
-        String result = paymentService.reviewPaymentBeforeProcessing(idAccount, pixKey, dto);
+        String result = paymentService.reviewPaymentBeforeProcessing(dto);
 
         assertEquals("Você realmente deseja fazer esse pagamento?", result);
     }
 
     // --- Exception test: sender not found ---
     @Test
-    void reviewPaymentBeforeProcessing_shouldThrowAccountSenderNotFoundException() {
-        when(accountService.findById(anyLong())).thenReturn(Optional.empty());
+    void reviewPaymentBeforeProcessing_shouldThrowSenderAccountNotFoundException() {
+        when(accountService.findSenderAccountById(anyLong())).thenThrow(SenderAccountNotFoundException.class);
 
-        PaymentAnalyzeDto dto = new PaymentAnalyzeDto("email", BigDecimal.TEN, "desc");
-        assertThrows(AccountSenderNotFoundException.class,
-                () -> paymentService.reviewPaymentBeforeProcessing(1L, "pix", dto));
+        PaymentAnalyzeDto dto = new PaymentAnalyzeDto(1L, "pix", "email", BigDecimal.TEN, "desc");
+        assertThrows(SenderAccountNotFoundException.class,
+                () -> paymentService.reviewPaymentBeforeProcessing(dto));
     }
 
     // --- Exception test: receiver not found ---
     @Test
-    void reviewPaymentBeforeProcessing_shouldThrowAccountReceiverNotFoundException() {
+    void reviewPaymentBeforeProcessing_shouldThrowReceiverAccountNotFoundException() {
         AccountModel sender = new AccountModel();
         sender.setIdAccount(1L);
-        when(accountService.findById(1L)).thenReturn(Optional.of(sender));
-        when(accountService.findByPixKey(anyString())).thenReturn(Optional.empty());
+        when(accountService.findSenderAccountById(eq(1L))).thenReturn(sender);
+        when(accountService.findReceiverAccountByPixKey(eq("pix"))).thenThrow(ReceiverAccountNotFoundException.class);
 
-        PaymentAnalyzeDto dto = new PaymentAnalyzeDto("email", BigDecimal.TEN, "desc");
-        assertThrows(AccountReceiverNotFoundException.class,
-                () -> paymentService.reviewPaymentBeforeProcessing(1L, "pix", dto));
+        PaymentAnalyzeDto dto = new PaymentAnalyzeDto(1L, "pix", "email", BigDecimal.TEN, "desc");
+        assertThrows(ReceiverAccountNotFoundException.class,
+                () -> paymentService.reviewPaymentBeforeProcessing(dto));
     }
 
     // --- Exception test: pix not found ---
@@ -138,13 +136,13 @@ class PaymentServiceImplTest {
         AccountModel receiver = new AccountModel();
         receiver.setIdAccount(2L);
 
-        when(accountService.findById(1L)).thenReturn(Optional.of(sender));
-        when(accountService.findByPixKey(anyString())).thenReturn(Optional.of(receiver));
-        when(pixService.findByKey(anyString())).thenReturn(Optional.empty());
+        when(accountService.findSenderAccountById(eq(1L))).thenReturn(sender);
+        when(accountService.findReceiverAccountByPixKey(anyString())).thenReturn(receiver);
+        when(pixService.findByKey(anyString())).thenThrow(PixNotFoundException.class);
 
-        PaymentAnalyzeDto dto = new PaymentAnalyzeDto("email", BigDecimal.TEN, "desc");
+        PaymentAnalyzeDto dto = new PaymentAnalyzeDto(1L, "pix", "email", BigDecimal.TEN, "desc");
         assertThrows(PixNotFoundException.class,
-                () -> paymentService.reviewPaymentBeforeProcessing(1L, "pix", dto));
+                () -> paymentService.reviewPaymentBeforeProcessing(dto));
     }
 
     // --- Exception test: transfer to yourself ---
@@ -158,13 +156,13 @@ class PaymentServiceImplTest {
         PixModel pixModel = new PixModel();
         pixModel.setKey("pix");
 
-        when(accountService.findById(1L)).thenReturn(Optional.of(sender));
-        when(accountService.findByPixKey(anyString())).thenReturn(Optional.of(receiver));
-        when(pixService.findByKey(anyString())).thenReturn(Optional.of(pixModel));
+        when(accountService.findSenderAccountById(eq(1L))).thenReturn(sender);
+        when(accountService.findReceiverAccountByPixKey(anyString())).thenReturn(receiver);
+        when(pixService.findByKey(anyString())).thenReturn(pixModel);
 
-        PaymentAnalyzeDto dto = new PaymentAnalyzeDto("email", BigDecimal.TEN, "desc");
+        PaymentAnalyzeDto dto = new PaymentAnalyzeDto(1L, "pix", "email", BigDecimal.TEN, "desc");
         assertThrows(TransferBalanceToYourselfException.class,
-                () -> paymentService.reviewPaymentBeforeProcessing(1L, "pix", dto));
+                () -> paymentService.reviewPaymentBeforeProcessing(dto));
     }
 
     // --- Exception test: insufficient balance ---
@@ -179,66 +177,36 @@ class PaymentServiceImplTest {
         PixModel pixModel = new PixModel();
         pixModel.setKey("pix");
 
-        when(accountService.findById(1L)).thenReturn(Optional.of(sender));
-        when(accountService.findByPixKey(anyString())).thenReturn(Optional.of(receiver));
-        when(pixService.findByKey(anyString())).thenReturn(Optional.of(pixModel));
+        when(accountService.findSenderAccountById(eq(1L))).thenReturn(sender);
+        when(accountService.findReceiverAccountByPixKey(anyString())).thenReturn(receiver);
+        when(pixService.findByKey(anyString())).thenReturn(pixModel);
 
-        PaymentAnalyzeDto dto = new PaymentAnalyzeDto("email", BigDecimal.TEN, "desc");
+        PaymentAnalyzeDto dto = new PaymentAnalyzeDto(1L, "pix", "email", BigDecimal.TEN, "desc");
+
         assertThrows(TransferInsuficientBalanceException.class,
-                () -> paymentService.reviewPaymentBeforeProcessing(1L, "pix", dto));
+                () -> paymentService.reviewPaymentBeforeProcessing(dto));
     }
 
-    // --- Exception test: first transfer to pix ---
+    // --- Success test for sendPix ---
     @Test
-    void directPayment_shouldThrowFirstTransferPixException() {
-        Long idAccount = 1L;
-        String pixKey = "pixkey";
-        PaymentDto paymentDto = new PaymentDto("descricao do pagamento", BigDecimal.TEN);
+    void sendPix_shouldSucceed() {
+        ConclusionPaymentDto paymentDto = new ConclusionPaymentDto(1L, "pixkey", "desc", BigDecimal.TEN);
 
         AccountModel sender = new AccountModel();
-        sender.setIdAccount(idAccount);
-        sender.setBalance(BigDecimal.valueOf(100));
-        AccountModel receiver = new AccountModel();
-        receiver.setIdAccount(2L);
-
-        PixModel pixModel = new PixModel();
-        pixModel.setKey(pixKey);
-
-        when(accountService.findById(idAccount)).thenReturn(Optional.of(sender));
-        when(accountService.findByPixKey(pixKey)).thenReturn(Optional.of(receiver));
-        when(pixService.findByKey(pixKey)).thenReturn(Optional.of(pixModel));
-        when(knownPixService.existsByIdAccountAndPixKey(idAccount, pixKey)).thenReturn(Optional.empty());
-
-        assertThrows(FirstTransferPixException.class,
-                () -> paymentService.directPayment(idAccount, pixKey, paymentDto));
-    }
-
-    // --- Success test for directPayment ---
-    @Test
-    void directPayment_shouldSucceed() {
-        Long idAccount = 1L;
-        String pixKey = "pixkey";
-        PaymentDto paymentDto = new PaymentDto("descricao do pagamento", BigDecimal.TEN);
-
-        AccountModel sender = new AccountModel();
-        sender.setIdAccount(idAccount);
+        sender.setIdAccount(1L);
         sender.setBalance(BigDecimal.valueOf(100));
         AccountModel receiver = new AccountModel();
         receiver.setIdAccount(2L);
         receiver.setBalance(BigDecimal.ZERO);
 
-        PixModel pixModel = new PixModel();
-        pixModel.setKey(pixKey);
+        when(accountService.findSenderAccountById(eq(1L))).thenReturn(sender);
+        when(accountService.findReceiverAccountByPixKey(eq("pixkey"))).thenReturn(receiver);
+        when(paymentRepository.save(any(PaymentModel.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(accountService.updateBalanceSender(any(AccountModel.class))).thenReturn(sender);
+        when(accountService.updateBalanceReceive(any(AccountModel.class))).thenReturn(receiver);
+        doNothing().when(paymentEventPublisher).publishPaymentEvent(any());
 
-        KnownPixModel knownPix = new KnownPixModel();
-
-        when(accountService.findById(idAccount)).thenReturn(Optional.of(sender));
-        when(accountService.findByPixKey(pixKey)).thenReturn(Optional.of(receiver));
-        when(pixService.findByKey(pixKey)).thenReturn(Optional.of(pixModel));
-        when(knownPixService.existsByIdAccountAndPixKey(idAccount, pixKey)).thenReturn(Optional.of(knownPix));
-        when(paymentRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-
-        String result = paymentService.directPayment(idAccount, pixKey, paymentDto);
+        String result = paymentService.sendPix(paymentDto);
 
         assertEquals("O pagamento foi realizado com sucesso!", result);
         assertEquals(BigDecimal.valueOf(90), sender.getBalance());
@@ -246,5 +214,29 @@ class PaymentServiceImplTest {
         verify(paymentRepository).save(any());
         verify(accountService).updateBalanceSender(sender);
         verify(accountService).updateBalanceReceive(receiver);
+    }
+
+    // --- Exception test: sendPix with sender not found ---
+    @Test
+    void sendPix_shouldThrowSenderAccountNotFoundException() {
+        ConclusionPaymentDto paymentDto = new ConclusionPaymentDto(1L, "pixkey", "desc", BigDecimal.TEN);
+
+        when(accountService.findSenderAccountById(1L)).thenThrow(SenderAccountNotFoundException.class);
+
+        assertThrows(SenderAccountNotFoundException.class, () -> paymentService.sendPix(paymentDto));
+    }
+
+    // --- Exception test: sendPix with receiver not found ---
+    @Test
+    void sendPix_shouldThrowReceiverAccountNotFoundException() {
+        ConclusionPaymentDto paymentDto = new ConclusionPaymentDto(1L, "pixkey", "desc", BigDecimal.TEN);
+
+        AccountModel sender = new AccountModel();
+        sender.setIdAccount(1L);
+
+        when(accountService.findSenderAccountById(eq(1L))).thenReturn(sender);
+        when(accountService.findReceiverAccountByPixKey(eq("pixkey"))).thenThrow(ReceiverAccountNotFoundException.class);
+
+        assertThrows(ReceiverAccountNotFoundException.class, () -> paymentService.sendPix(paymentDto));
     }
 }

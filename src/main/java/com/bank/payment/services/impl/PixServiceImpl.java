@@ -24,7 +24,7 @@ public class PixServiceImpl implements PixService {
     }
 
     @Override
-    public PixModel findByKeyOrThrow(String key) {
+    public PixModel findByKey(String key) {
         return pixRepository.findByKey(key)
             .orElseThrow(PixNotFoundException::new);
     }
