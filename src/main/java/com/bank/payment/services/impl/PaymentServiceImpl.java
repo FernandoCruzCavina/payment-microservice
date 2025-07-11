@@ -132,7 +132,7 @@ public class PaymentServiceImpl implements PaymentService {
     private void completePaymentAndUpdateAccounts(PaymentModel paymentModel) {
         savePayment(paymentModel);
         accountService.updateBalanceSender(paymentModel.getSenderAccount());
-        accountService.updateBalanceReceive(paymentModel.getReceiverAccount());
+        accountService.updateBalanceReceiver(paymentModel.getReceiverAccount());
     }
 
     private AccountModel getSenderAccount(Long id) {

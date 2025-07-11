@@ -25,10 +25,11 @@ public class AccountEventDto {
     private String imageUrl;
     private String actionType;
 
-    public AccountModel toAccountModel() {
-        var accountModel = new AccountModel();
+    public static AccountEventDto fromAccountModel(AccountModel accountModel) {
+        var accountEventDto = new AccountEventDto();
 
-        BeanUtils.copyProperties(this, accountModel);
-        return accountModel;
+        BeanUtils.copyProperties(accountModel, accountEventDto);
+
+        return accountEventDto;
     }
 }

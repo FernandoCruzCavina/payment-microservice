@@ -1,8 +1,5 @@
 package com.bank.payment.services;
 
-import java.util.Optional;
-import java.util.function.Supplier;
-
 import com.bank.payment.models.AccountModel;
 
 /**
@@ -54,7 +51,7 @@ public interface AccountService {
      * @param accountModel the AccountModel with updated balance information
      * @return the updated AccountModel
      */
-    AccountModel updateBalanceReceive(AccountModel accountModel);
+    AccountModel updateBalanceReceiver(AccountModel accountModel);
 
     /**
      * Updates the balance of the account sending a payment.

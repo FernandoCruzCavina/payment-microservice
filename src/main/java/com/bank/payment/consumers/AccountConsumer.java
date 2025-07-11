@@ -1,6 +1,5 @@
 package com.bank.payment.consumers;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.ExchangeTypes;
@@ -13,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import com.bank.payment.dtos.AccountEventDto;
 import com.bank.payment.enums.ActionType;
+import com.bank.payment.models.AccountModel;
 import com.bank.payment.services.AccountService;
 
 /**
@@ -48,7 +48,9 @@ public class AccountConsumer {
      */
     @RabbitListener(bindings = @QueueBinding(value = @Queue(value = "${broker.queue.accountEventQueue}", durable = "true"), exchange = @Exchange(value = "${broker.exchange.accountEventExchange}", type = ExchangeTypes.FANOUT, ignoreDeclarationExceptions = "true")))
     public void listenAccountEvent(@Payload AccountEventDto accountEventDto) {
-        var accountModel = accountEventDto.toAccountModel();
+        AccountModel accountModel = AccountModel.fromAccountEventDto(accountEventDto);
+        
+        logger.info(accountModel.toString());
 
         switch (ActionType.valueOf(accountEventDto.getActionType())) {
             case CREATE:
@@ -60,6 +62,5 @@ public class AccountConsumer {
             default:
                 break;
         }
-        logger.info(accountModel.toString());
     }
 }

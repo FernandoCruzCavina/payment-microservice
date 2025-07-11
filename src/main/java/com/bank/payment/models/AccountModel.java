@@ -62,11 +62,10 @@ public class AccountModel implements Serializable {
     @OneToMany(mappedBy = "receiverAccount", fetch = FetchType.LAZY)
     private Set<PaymentModel> receivePayment;
 
-    public AccountEventDto toAccountEventDto() {
-        var accountEventDto = new AccountEventDto();
+    public static AccountModel fromAccountEventDto(AccountEventDto accountEventDto) {
+        var accountModel = new AccountModel();
 
-        BeanUtils.copyProperties(this, accountEventDto);
-
-        return accountEventDto;
+        BeanUtils.copyProperties(accountEventDto, accountModel);
+        return accountModel;
     }
 }

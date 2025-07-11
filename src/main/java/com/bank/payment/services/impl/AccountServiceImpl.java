@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import com.bank.payment.dtos.AccountEventDto;
 import com.bank.payment.enums.ActionType;
 import com.bank.payment.exceptions.ReceiverAccountNotFoundException;
 import com.bank.payment.exceptions.SenderAccountNotFoundException;
@@ -53,21 +54,21 @@ public class AccountServiceImpl implements AccountService {
 
     @Transactional
     @Override
-    public AccountModel updateBalanceSender(AccountModel accountModel) {
-        logger.info("Enviando evento para: {}", accountModel.getIdAccount());
+    public AccountModel updateBalanceSender(AccountModel sender) {
+        logger.info("Enviando evento para: {}", sender.getIdAccount());
 
-        paymentSenderEventPublisher.publishPaymentSenderEvent(accountModel.toAccountEventDto(),
+        paymentSenderEventPublisher.publishPaymentSenderEvent(AccountEventDto.fromAccountModel(sender),
                 ActionType.PAYMENT);
-        return accountModel;
+        return sender;
     }
 
     @Transactional
     @Override
-    public AccountModel updateBalanceReceive(AccountModel accountModel) {
-        logger.info("Enviando evento para: {}", accountModel.getIdAccount());
+    public AccountModel updateBalanceReceiver(AccountModel receiver) {
+        logger.info("Enviando evento para: {}", receiver.getIdAccount());
 
-        paymentReceiverEventPublisher.publishPaymentReceiverEvent(accountModel.toAccountEventDto(),
+        paymentReceiverEventPublisher.publishPaymentReceiverEvent(AccountEventDto.fromAccountModel(receiver),
                 ActionType.PAYMENT);
-        return accountModel;
+        return receiver;
     }
 }

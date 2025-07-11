@@ -1,7 +1,5 @@
 package com.bank.payment.services;
 
-import java.util.Optional;
-
 import com.bank.payment.models.AccountModel;
 import com.bank.payment.models.KnownPixModel;
 import com.bank.payment.models.PixModel;

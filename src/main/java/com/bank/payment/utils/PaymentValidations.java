@@ -10,8 +10,6 @@ import com.bank.payment.models.AccountModel;
 
 public final class PaymentValidations {
 
-    public PaymentValidations() {}
-
     public static void validateNotTransferringToSelf(AccountModel sender, AccountModel receiver) {
         if (sender.getIdAccount().equals(receiver.getIdAccount())) {
             throw new TransferBalanceToYourselfException();
